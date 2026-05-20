@@ -123,6 +123,20 @@ class VehicleItem {
   });
 }
 
+class PerformanceTransactionItem {
+  final String plate;
+  final String fuel;
+  final String liters;
+  final String time;
+
+  const PerformanceTransactionItem({
+    required this.plate,
+    required this.fuel,
+    required this.liters,
+    required this.time,
+  });
+}
+
 const List<ScanMethodItem> scanMethods = [
   ScanMethodItem(
     icon: Icons.qr_code_scanner_outlined,
@@ -308,3 +322,36 @@ const List<VehicleItem> registeredVehicles = [
 ];
 
 const int remainingQuotaLiters = 120;
+
+const List<PerformanceTransactionItem> performanceTransactions = [
+  PerformanceTransactionItem(
+    plate: 'B 1234 XYZ',
+    fuel: 'Pertalite',
+    liters: '12 L',
+    time: '10:42',
+  ),
+  PerformanceTransactionItem(
+    plate: 'D 8811 AB',
+    fuel: 'Bio Solar',
+    liters: '18 L',
+    time: '10:30',
+  ),
+  PerformanceTransactionItem(
+    plate: 'B 7788 KL',
+    fuel: 'Pertalite',
+    liters: '10 L',
+    time: '10:18',
+  ),
+  PerformanceTransactionItem(
+    plate: 'F 5522 TU',
+    fuel: 'Pertamax',
+    liters: '15 L',
+    time: '10:05',
+  ),
+  PerformanceTransactionItem(
+    plate: 'B 9981 CD',
+    fuel: 'Pertalite',
+    liters: '20 L',
+    time: '09:52',
+  ),
+];

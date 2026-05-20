@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/main_layout.dart';
+import 'screens/splash_screen.dart';
 import 'theme/theme.dart';
 
 void main() {
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'MySUF Cashier',
       theme: AppTheme.lightTheme(),
-      home: const MainLayout(),
+      home: const SplashScreen(),
     );
   }
 }

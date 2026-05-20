@@ -5,13 +5,58 @@ import '../widgets/section_header.dart';
 import '../widgets/summary_card.dart';
 import '../widgets/transaction_card.dart';
 
-class TransactionsScreen extends StatelessWidget {
+class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
+
+  @override
+  State<TransactionsScreen> createState() => _TransactionsScreenState();
+}
+
+class _TransactionsScreenState extends State<TransactionsScreen> {
+  String _activeFilter = 'Semua';
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<TransactionItem> get _filteredTransactions {
+    List<TransactionItem> items = List.from(transactions);
+
+    if (_activeFilter != 'Semua') {
+      items = items.where((item) => item.status == _activeFilter).toList();
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      items = items.where((item) {
+        return item.id.toLowerCase().contains(_searchQuery) ||
+            item.userName.toLowerCase().contains(_searchQuery) ||
+            item.userNik.toLowerCase().contains(_searchQuery) ||
+            item.plate.toLowerCase().contains(_searchQuery);
+      }).toList();
+    }
+
+    return items;
+  }
 
   @override
   Widget build(BuildContext context) {
     const double horizontalPadding = 20;
     const double verticalSpacing = 16;
+    final List<TransactionItem> currentTransactions = _filteredTransactions;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
@@ -25,9 +70,7 @@ class TransactionsScreen extends StatelessWidget {
         children: [
           Text(
             'Riwayat Transaksi',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 6),
           Text(
@@ -60,42 +103,88 @@ class TransactionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: verticalSpacing),
           TextField(
+            controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Cari transaksi, NIK, atau plat nomor...',
               prefixIcon: const Icon(Icons.search),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
             ),
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
             runSpacing: 10,
-            children: const [
-              _FilterChip(label: 'Semua (6)', isActive: true),
-              _FilterChip(label: 'Berhasil (4)'),
-              _FilterChip(label: 'Pending (1)'),
-              _FilterChip(label: 'Gagal (1)'),
+            children: [
+              _FilterChip(
+                label: 'Semua (${transactions.length})',
+                isActive: _activeFilter == 'Semua',
+                onTap: () => setState(() => _activeFilter = 'Semua'),
+              ),
+              _FilterChip(
+                label:
+                    'Berhasil (${transactions.where((t) => t.status == 'Berhasil').length})',
+                isActive: _activeFilter == 'Berhasil',
+                onTap: () => setState(() => _activeFilter = 'Berhasil'),
+              ),
+              _FilterChip(
+                label:
+                    'Pending (${transactions.where((t) => t.status == 'Pending').length})',
+                isActive: _activeFilter == 'Pending',
+                onTap: () => setState(() => _activeFilter = 'Pending'),
+              ),
+              _FilterChip(
+                label:
+                    'Gagal (${transactions.where((t) => t.status == 'Gagal').length})',
+                isActive: _activeFilter == 'Gagal',
+                onTap: () => setState(() => _activeFilter = 'Gagal'),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           SectionHeader(
-            title: '6 transaksi ditemukan',
+            title: '${currentTransactions.length} transaksi ditemukan',
             trailing: TextButton(
-              onPressed: () {},
+              onPressed: () {
+                // TODO: Implement export functionality
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Fitur export akan segera hadir!'),
+                  ),
+                );
+              },
               style: TextButton.styleFrom(foregroundColor: AppColors.primary),
               child: const Text('Export'),
             ),
           ),
           const SizedBox(height: 12),
-          ...transactions.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: TransactionCard(item: item),
+          if (currentTransactions.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.search_off_rounded,
+                      size: 48,
+                      color: AppColors.textSecondary.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tidak ada transaksi ditemukan',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ...currentTransactions.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: TransactionCard(item: item),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -105,28 +194,32 @@ class TransactionsScreen extends StatelessWidget {
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool isActive;
+  final VoidCallback? onTap;
 
-  const _FilterChip({required this.label, this.isActive = false});
+  const _FilterChip({required this.label, this.isActive = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final Color background = isActive ? AppColors.primary : AppColors.surface;
     final Color textColor = isActive ? Colors.white : AppColors.textPrimary;
+    final Color borderColor = isActive ? AppColors.primary : AppColors.border;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isActive ? AppColors.primary : const Color(0xFFE3E3E3),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: borderColor, width: 1),
         ),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: textColor,
-          fontWeight: FontWeight.w600,
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: textColor,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+          ),
         ),
       ),
     );

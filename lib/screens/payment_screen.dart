@@ -205,25 +205,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.border, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _InfoRow(label: 'Nama', value: widget.draft.userName),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   _InfoRow(label: 'Plat', value: widget.draft.plate),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   _InfoRow(label: 'Jenis BBM', value: widget.draft.fuel),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   _InfoRow(
                     label: 'Jumlah',
                     value: '${widget.draft.liters} Liter',
                   ),
-                  const Divider(height: 20),
+                  const Divider(height: 24),
                   Row(
                     children: [
                       Text(
@@ -238,6 +239,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
                         ),
                       ),
                     ],
