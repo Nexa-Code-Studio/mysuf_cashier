@@ -24,6 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: const Text('Keluar dari aplikasi?'),
           content: const Text(
             'Anda akan kembali ke halaman login dan perlu masuk lagi untuk melanjutkan.',
@@ -49,6 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppSession session = SessionScope.of(context);
     const double horizontalPadding = 20;
 
     return SingleChildScrollView(
@@ -69,6 +71,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           const ProfileCard(info: profileInfo),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Email Login',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  session.email,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 20),
           Text(
             'Statistik Hari Ini',

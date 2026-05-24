@@ -29,7 +29,6 @@ class _MainLayoutState extends State<MainLayout> {
 
     return Scaffold(
       appBar: PosAppBar(
-        operatorEmail: session.email,
         onLogout: session.signOut,
       ),
       body: SafeArea(

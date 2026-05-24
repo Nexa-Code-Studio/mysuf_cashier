@@ -15,6 +15,14 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
   String _statusText =
       'Tempelkan E-KTP ke bagian belakang perangkat untuk membaca NFC.';
 
+  String _maskNfcValue(String value) {
+    if (value.length <= 4) {
+      return value;
+    }
+
+    return '${'•' * (value.length - 4)}${value.substring(value.length - 4)}';
+  }
+
   Future<void> _scanNfc() async {
     if (_isScanning) {
       return;
@@ -58,18 +66,19 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
       }
 
       final String tagId = tag?.id?.toString() ?? '';
+      final String maskedTagId = tagId.isEmpty ? '' : _maskNfcValue(tagId);
       setState(() {
-        _statusText = tagId.isEmpty
+        _statusText = maskedTagId.isEmpty
             ? 'NFC E-KTP terbaca dengan sukses.'
-            : 'NFC E-KTP terbaca: $tagId';
+            : 'NFC E-KTP terbaca: $maskedTagId';
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            tagId.isEmpty
+            maskedTagId.isEmpty
                 ? 'NFC E-KTP terdeteksi'
-                : 'NFC E-KTP terdeteksi: $tagId',
+                : 'NFC E-KTP terdeteksi: $maskedTagId',
           ),
         ),
       );
