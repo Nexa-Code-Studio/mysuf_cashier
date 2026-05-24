@@ -28,6 +28,7 @@ class TransactionItem {
   final String id;
   final String status;
   final String date;
+  final DateTime occurredAt;
   final String userName;
   final String userNik;
   final String plate;
@@ -41,6 +42,7 @@ class TransactionItem {
     required this.id,
     required this.status,
     required this.date,
+    required this.occurredAt,
     required this.userName,
     required this.userNik,
     required this.plate,
@@ -146,7 +148,7 @@ const List<ScanMethodItem> scanMethods = [
   ScanMethodItem(
     icon: Icons.perm_identity_outlined,
     title: 'Scan E-KTP',
-    subtitle: 'NFC atau kamera untuk E-KTP',
+    subtitle: 'Gunakan kamera dan NFC untuk E-KTP',
   ),
   ScanMethodItem(
     icon: Icons.keyboard_outlined,
@@ -173,11 +175,12 @@ const List<RecentScanItem> recentScans = [
   ),
 ];
 
-const List<TransactionItem> transactions = [
+final List<TransactionItem> transactions = [
   TransactionItem(
     id: 'TRX-20240515-001',
     status: 'Berhasil',
-    date: '15 Mei 2026, 10:24',
+    date: '24 Mei 2026, 10:24',
+    occurredAt: DateTime(2026, 5, 24, 10, 24),
     userName: 'Budi Santoso',
     userNik: '32012 4501 1234 0001',
     plate: 'B 1234 KAT',
@@ -190,7 +193,8 @@ const List<TransactionItem> transactions = [
   TransactionItem(
     id: 'TRX-20240515-002',
     status: 'Berhasil',
-    date: '15 Mei 2026, 10:12',
+    date: '24 Mei 2026, 10:12',
+    occurredAt: DateTime(2026, 5, 24, 10, 12),
     userName: 'Siti Lestari',
     userNik: '32012 4501 1234 0002',
     plate: 'D 9087 AU',
@@ -203,7 +207,8 @@ const List<TransactionItem> transactions = [
   TransactionItem(
     id: 'TRX-20240515-003',
     status: 'Pending',
-    date: '15 Mei 2026, 09:58',
+    date: '23 Mei 2026, 09:58',
+    occurredAt: DateTime(2026, 5, 23, 9, 58),
     userName: 'Rizky Pratama',
     userNik: '32012 4501 1234 0003',
     plate: 'B 7712 TY',
@@ -216,7 +221,8 @@ const List<TransactionItem> transactions = [
   TransactionItem(
     id: 'TRX-20240515-004',
     status: 'Berhasil',
-    date: '15 Mei 2026, 09:45',
+    date: '19 Mei 2026, 09:45',
+    occurredAt: DateTime(2026, 5, 19, 9, 45),
     userName: 'Dewi Anggraeni',
     userNik: '32012 4501 1234 0004',
     plate: 'F 5621 KI',
@@ -229,7 +235,8 @@ const List<TransactionItem> transactions = [
   TransactionItem(
     id: 'TRX-20240515-005',
     status: 'Gagal',
-    date: '15 Mei 2026, 09:20',
+    date: '28 Apr 2026, 09:20',
+    occurredAt: DateTime(2026, 4, 28, 9, 20),
     userName: 'Hendra Wijaya',
     userNik: '32012 4501 1234 0005',
     plate: 'B 4432 VP',
@@ -242,7 +249,8 @@ const List<TransactionItem> transactions = [
   TransactionItem(
     id: 'TRX-20240515-006',
     status: 'Berhasil',
-    date: '15 Mei 2026, 09:05',
+    date: '24 Apr 2026, 09:05',
+    occurredAt: DateTime(2026, 4, 24, 9, 5),
     userName: 'Maya Kartika',
     userNik: '32012 4501 1234 0006',
     plate: 'B 9911 SQ',

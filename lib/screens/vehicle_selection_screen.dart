@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/mock_data.dart';
 import '../theme/theme.dart';
 import '../widgets/vehicle_card.dart';
+import '../utils/privacy.dart';
 import 'transaction_input_screen.dart';
 
 class VehicleSelectionScreen extends StatelessWidget {
@@ -41,7 +42,7 @@ class VehicleSelectionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'NIK: ${currentUser.nik}',
+                    'NIK: ${maskNik(currentUser.nik)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),

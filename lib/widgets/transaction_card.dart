@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/mock_data.dart';
 import '../theme/theme.dart';
 import 'status_badge.dart';
+import '../utils/privacy.dart';
 
 class TransactionCard extends StatelessWidget {
   final TransactionItem item;
@@ -36,7 +37,7 @@ class TransactionCard extends StatelessWidget {
           const SizedBox(height: 16),
           _InfoRow(
             label: 'Pengguna',
-            value: '${item.userName} · ${item.userNik}',
+            value: '${item.userName} · ${maskNik(item.userNik)}',
           ),
           const SizedBox(height: 8),
           _InfoRow(label: 'Kendaraan', value: '${item.plate} · ${item.fuel}'),

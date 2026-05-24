@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../theme/theme.dart';
 
 class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const PosAppBar({super.key});
+  final Future<void> Function() onLogout;
+
+  const PosAppBar({super.key, required this.onLogout});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -27,6 +29,15 @@ class PosAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
+      actions: [
+        IconButton(
+          onPressed: () {
+            onLogout();
+          },
+          tooltip: 'Logout',
+          icon: const Icon(Icons.logout_rounded),
+        ),
+      ],
     );
   }
 }

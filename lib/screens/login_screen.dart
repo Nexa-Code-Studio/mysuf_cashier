@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import '../theme/theme.dart';
-import 'main_layout.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,176 +9,162 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
-  bool _obscurePassword = true;
-  bool _canSubmit = false;
-  final TextEditingController _idController = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  late final AnimationController _headerController;
-  late final Animation<double> _headerFade;
-  late final Animation<Offset> _headerSlide;
-
-  @override
-  void initState() {
-    super.initState();
-    _idController.addListener(_validate);
-    _passwordController.addListener(_validate);
-    _headerController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _headerFade = CurvedAnimation(
-      parent: _headerController,
-      curve: Curves.easeOut,
-    );
-    _headerSlide = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _headerController, curve: Curves.easeOut),
-        );
-    _headerController.forward();
-  }
 
   @override
   void dispose() {
-    _idController.removeListener(_validate);
-    _passwordController.removeListener(_validate);
-    _idController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
-    _headerController.dispose();
     super.dispose();
   }
 
-  void _validate() {
-    final bool isValid =
-        _idController.text.trim().isNotEmpty &&
-        _passwordController.text.isNotEmpty;
-    if (isValid != _canSubmit) {
-      setState(() => _canSubmit = isValid);
+  Future<void> _signIn() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
+
+    final AppSession session = SessionScope.of(context);
+    await session.signIn(email: _emailController.text.trim());
   }
 
   @override
   Widget build(BuildContext context) {
+    final bool isBusy = SessionScope.of(context).isBusy;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SlideTransition(
-                position: _headerSlide,
-                child: FadeTransition(
-                  opacity: _headerFade,
-                  child: Container(
-                    height: 220,
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(32),
-                        bottomRight: Radius.circular(32),
-                      ),
-                    ),
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-                        child: Text(
-                          'SPBU POS System',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFFFF6F7), Color(0xFFFFFFFF), Color(0xFFF4F4F5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Selamat Datang,',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Silakan login untuk memulai shift Anda',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x14000000),
+                            blurRadius: 24,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _idController,
-                      decoration: InputDecoration(
-                        labelText: 'ID Petugas / NIK',
-                        prefixIcon: const Icon(Icons.person_outline),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: const Icon(
+                              Icons.local_gas_station_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            'MySUF Cashier',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Masuk tanpa registrasi. Gunakan email operator yang sudah tersedia untuk membuka aplikasi kasir.',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
+                          const SizedBox(height: 24),
+                          Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  controller: _emailController,
+                                  keyboardType: TextInputType.emailAddress,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Email operator',
+                                    hintText: 'Contoh: andi@mysuf.co.id',
+                                  ),
+                                  validator: (value) {
+                                    final String text = value?.trim() ?? '';
+                                    if (text.isEmpty) {
+                                      return 'Email wajib diisi';
+                                    }
+
+                                    final bool isValid = RegExp(
+                                      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                                    ).hasMatch(text);
+                                    if (!isValid) {
+                                      return 'Format email tidak valid';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 14),
+                                TextFormField(
+                                  controller: _passwordController,
+                                  obscureText: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'PIN / kata sandi',
+                                    hintText: 'Masukkan PIN atau password',
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'PIN / kata sandi wajib diisi';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: isBusy ? null : _signIn,
+                                    child: Text(
+                                      isBusy ? 'Memproses Masuk...' : 'Masuk ke Kasir',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Kata Sandi',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            );
-                          },
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
+                    Text(
+                      'Scanner QR, NFC E-KTP, dan PIN e-wallet sudah aktif di aplikasi ini.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
                           ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _canSubmit
-                            ? () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const MainLayout(),
-                                  ),
-                                );
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _canSubmit
-                              ? AppColors.primary
-                              : const Color(0xFFCBD5E1),
-                        ),
-                        child: const Text('Masuk'),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Center(
-                      child: Text(
-                        'Butuh bantuan? Hubungi Supervisor',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

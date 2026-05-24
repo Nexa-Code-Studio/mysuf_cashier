@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import '../models/mock_data.dart';
 import '../theme/theme.dart';
 import '../widgets/profile_card.dart';
@@ -6,7 +7,6 @@ import '../widgets/section_header.dart';
 import '../widgets/stat_tile.dart';
 import 'performance_stat_screen.dart';
 import 'shift_schedule_screen.dart';
-import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,8 +19,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _notificationsEnabled = true;
   bool _autoSyncEnabled = true;
 
+  Future<void> _confirmLogout() async {
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text('Keluar dari aplikasi?'),
+          content: const Text(
+            'Anda akan kembali ke halaman login dan perlu masuk lagi untuk melanjutkan.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true && mounted) {
+      await SessionScope.of(context).signOut();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final AppSession session = SessionScope.of(context);
     const double horizontalPadding = 20;
 
     return SingleChildScrollView(
@@ -41,6 +71,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           const ProfileCard(info: profileInfo),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Email Login',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  session.email,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 20),
           Text(
             'Statistik Hari Ini',
@@ -95,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             contentPadding: EdgeInsets.zero,
             title: const Text('Notifikasi'),
             value: _notificationsEnabled,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (value) => setState(() => _notificationsEnabled = value),
           ),
           const Divider(),
@@ -103,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             contentPadding: EdgeInsets.zero,
             title: const Text('Auto Sync'),
             value: _autoSyncEnabled,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (value) => setState(() => _autoSyncEnabled = value),
           ),
           const SizedBox(height: 16),
@@ -113,12 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildTile('Bantuan & Dukungan'),
           const SizedBox(height: 20),
           OutlinedButton(
-            onPressed: () {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (Route<dynamic> route) => false,
-              );
-            },
+            onPressed: _confirmLogout,
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary),

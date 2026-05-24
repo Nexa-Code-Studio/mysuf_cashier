@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import '../theme/theme.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
 import 'vehicle_selection_screen.dart';
 
 class KtpScannerScreen extends StatefulWidget {
@@ -11,102 +11,219 @@ class KtpScannerScreen extends StatefulWidget {
 }
 
 class _KtpScannerScreenState extends State<KtpScannerScreen> {
-  bool _hasScanned = false;
+  bool _isScanning = false;
+  String _statusText =
+      'Tempelkan E-KTP ke bagian belakang perangkat untuk membaca NFC.';
+
+  String _maskNfcValue(String value) {
+    if (value.length <= 4) {
+      return value;
+    }
+
+    return '${'•' * (value.length - 4)}${value.substring(value.length - 4)}';
+  }
+
+  Future<void> _scanNfc() async {
+    if (_isScanning) {
+      return;
+    }
+
+    setState(() {
+      _isScanning = true;
+      _statusText = 'Mendeteksi NFC E-KTP...';
+    });
+
+    try {
+      final NFCAvailability availability = await FlutterNfcKit.nfcAvailability;
+      if (availability != NFCAvailability.available) {
+        if (!mounted) {
+          return;
+        }
+
+        final String availabilityMessage = availability == NFCAvailability.disabled
+            ? 'NFC di perangkat ini sedang nonaktif. Aktifkan NFC di pengaturan lalu coba lagi.'
+            : 'Perangkat ini tidak mendukung NFC. Gunakan ponsel fisik yang punya NFC.';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(availabilityMessage)),
+        );
+        setState(() {
+          _statusText = availabilityMessage;
+        });
+        return;
+      }
+
+      final dynamic tag = await FlutterNfcKit.poll(
+        timeout: const Duration(seconds: 20),
+        androidCheckNDEF: false,
+        androidPlatformSound: false,
+        androidReaderModeFlags: 0x80 | 0x100,
+        iosAlertMessage: 'Tempelkan E-KTP ke belakang perangkat',
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final String tagId = tag?.id?.toString() ?? '';
+      final String maskedTagId = tagId.isEmpty ? '' : _maskNfcValue(tagId);
+      setState(() {
+        _statusText = maskedTagId.isEmpty
+            ? 'NFC E-KTP terbaca dengan sukses.'
+            : 'NFC E-KTP terbaca: $maskedTagId';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            maskedTagId.isEmpty
+                ? 'NFC E-KTP terdeteksi'
+                : 'NFC E-KTP terdeteksi: $maskedTagId',
+          ),
+        ),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const VehicleSelectionScreen()),
+      );
+    } on PlatformException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message ?? 'Gagal membaca NFC E-KTP')),
+      );
+      setState(() {
+        _statusText = 'NFC belum berhasil dibaca. Coba tempelkan kartu lagi.';
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('NFC belum berhasil dibaca')),
+      );
+      setState(() {
+        _statusText = 'NFC belum berhasil dibaca. Coba tempelkan kartu lagi.';
+      });
+    } finally {
+      try {
+        await FlutterNfcKit.finish(iosAlertMessage: 'Sesi NFC selesai');
+      } catch (_) {
+        // Ignore if the session is already closed.
+      }
+
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bool isBusy = _isScanning;
+
     return Scaffold(
+      backgroundColor: const Color(0xFF101214),
       appBar: AppBar(
         backgroundColor: const Color(0xFF101214),
         foregroundColor: Colors.white,
         elevation: 0,
+        title: const Text('Scan NFC E-KTP'),
       ),
-      body: Stack(
-        children: [
-          MobileScanner(
-            onDetect: (capture) {
-              if (_hasScanned) return;
-              final Barcode barcode = capture.barcodes.first;
-              final String? rawValue = barcode.rawValue;
-              if (rawValue == null || rawValue.isEmpty) return;
-              _hasScanned = true;
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('E-KTP terdeteksi. Memuat data...'),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF181B1F),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 104,
+                        height: 104,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.nfc_rounded,
+                          size: 54,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'NFC E-KTP',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        _statusText,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                      ),
+                      const SizedBox(height: 18),
+                      if (isBusy)
+                        const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: Colors.white,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              );
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const VehicleSelectionScreen(),
-                ),
-              );
-            },
-          ),
-          const _ScannerOverlay(),
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 32,
-            child: Text(
-              'Arahkan Kamera ke E-KTP atau Tempelkan E-KTP (NFC) ke belakang perangkat',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
               ),
-            ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: isBusy ? null : _scanNfc,
+                  child: Text(isBusy ? 'Membaca NFC...' : 'Mulai Scan NFC'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Tempelkan kartu ke area NFC perangkat. Kamera tidak digunakan pada layar ini.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.72),
+                    ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
-}
-
-class _ScannerOverlay extends StatelessWidget {
-  const _ScannerOverlay();
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: CustomPaint(
-        size: Size.infinite,
-        painter: _ScannerOverlayPainter(),
-      ),
-    );
-  }
-}
-
-class _ScannerOverlayPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Rect rect = Offset.zero & size;
-    final Paint overlayPaint = Paint()..color = Colors.black.withOpacity(0.55);
-    final Paint clearPaint = Paint()..blendMode = BlendMode.clear;
-
-    final double frameSize = 240;
-    final RRect hole = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(size.width / 2, size.height / 2 - 20),
-        width: frameSize,
-        height: frameSize,
-      ),
-      const Radius.circular(16),
-    );
-
-    canvas.saveLayer(rect, Paint());
-    canvas.drawRect(rect, overlayPaint);
-    canvas.drawRRect(hole, clearPaint);
-    canvas.restore();
-
-    final Paint borderPaint = Paint()
-      ..color = AppColors.primary
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    canvas.drawRRect(hole, borderPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

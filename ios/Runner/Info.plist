@@ -27,7 +27,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera access is required to scan QR codes.</string>
+	<string>Aplikasi memerlukan kamera untuk memindai QR dan E-KTP.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Aplikasi memerlukan NFC untuk membaca E-KTP.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

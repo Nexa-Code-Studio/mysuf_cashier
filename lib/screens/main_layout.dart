@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import '../widgets/pos_app_bar.dart';
 import 'profile_screen.dart';
 import 'scan_screen.dart';
@@ -24,8 +25,12 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final AppSession session = SessionScope.of(context);
+
     return Scaffold(
-      appBar: const PosAppBar(),
+      appBar: PosAppBar(
+        onLogout: session.signOut,
+      ),
       body: SafeArea(
         child: IndexedStack(index: _currentIndex, children: _screens),
       ),

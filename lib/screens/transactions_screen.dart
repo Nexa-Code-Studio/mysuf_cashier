@@ -13,7 +13,7 @@ class TransactionsScreen extends StatefulWidget {
 }
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
-  String _activeFilter = 'Semua';
+  String _activeTimeFilter = 'Semua Waktu';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -36,8 +36,30 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   List<TransactionItem> get _filteredTransactions {
     List<TransactionItem> items = List.from(transactions);
 
-    if (_activeFilter != 'Semua') {
-      items = items.where((item) => item.status == _activeFilter).toList();
+    if (_activeTimeFilter != 'Semua Waktu') {
+      final DateTime now = DateTime.now();
+      final DateTime todayStart = DateTime(now.year, now.month, now.day);
+
+      items = items.where((item) {
+        if (_activeTimeFilter == 'Hari Ini') {
+          return item.occurredAt.year == now.year &&
+              item.occurredAt.month == now.month &&
+              item.occurredAt.day == now.day;
+        }
+
+        if (_activeTimeFilter == '7 Hari Terakhir') {
+          final DateTime start = todayStart.subtract(const Duration(days: 6));
+          return !item.occurredAt.isBefore(start) &&
+              item.occurredAt.isBefore(todayStart.add(const Duration(days: 1)));
+        }
+
+        if (_activeTimeFilter == '1 Bulan Terakhir') {
+          final DateTime start = DateTime(now.year, now.month - 1, now.day);
+          return !item.occurredAt.isBefore(start);
+        }
+
+        return true;
+      }).toList();
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -45,7 +67,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         return item.id.toLowerCase().contains(_searchQuery) ||
             item.userName.toLowerCase().contains(_searchQuery) ||
             item.userNik.toLowerCase().contains(_searchQuery) ||
-            item.plate.toLowerCase().contains(_searchQuery);
+            item.plate.toLowerCase().contains(_searchQuery) ||
+            item.fuel.toLowerCase().contains(_searchQuery) ||
+            item.payment.toLowerCase().contains(_searchQuery) ||
+            item.cashier.toLowerCase().contains(_searchQuery) ||
+            item.status.toLowerCase().contains(_searchQuery) ||
+            item.date.toLowerCase().contains(_searchQuery) ||
+            item.total.toLowerCase().contains(_searchQuery);
       }).toList();
     }
 
@@ -105,7 +133,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Cari transaksi, NIK, atau plat nomor...',
+              hintText: 'Cari transaksi, NIK, plat, atau metode bayar...',
               prefixIcon: const Icon(Icons.search),
             ),
           ),
@@ -115,46 +143,29 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             runSpacing: 10,
             children: [
               _FilterChip(
-                label: 'Semua (${transactions.length})',
-                isActive: _activeFilter == 'Semua',
-                onTap: () => setState(() => _activeFilter = 'Semua'),
+                label: 'Semua Waktu',
+                isActive: _activeTimeFilter == 'Semua Waktu',
+                onTap: () => setState(() => _activeTimeFilter = 'Semua Waktu'),
               ),
               _FilterChip(
-                label:
-                    'Berhasil (${transactions.where((t) => t.status == 'Berhasil').length})',
-                isActive: _activeFilter == 'Berhasil',
-                onTap: () => setState(() => _activeFilter = 'Berhasil'),
+                label: 'Hari Ini',
+                isActive: _activeTimeFilter == 'Hari Ini',
+                onTap: () => setState(() => _activeTimeFilter = 'Hari Ini'),
               ),
               _FilterChip(
-                label:
-                    'Pending (${transactions.where((t) => t.status == 'Pending').length})',
-                isActive: _activeFilter == 'Pending',
-                onTap: () => setState(() => _activeFilter = 'Pending'),
+                label: '7 Hari Terakhir',
+                isActive: _activeTimeFilter == '7 Hari Terakhir',
+                onTap: () => setState(() => _activeTimeFilter = '7 Hari Terakhir'),
               ),
               _FilterChip(
-                label:
-                    'Gagal (${transactions.where((t) => t.status == 'Gagal').length})',
-                isActive: _activeFilter == 'Gagal',
-                onTap: () => setState(() => _activeFilter = 'Gagal'),
+                label: '1 Bulan Terakhir',
+                isActive: _activeTimeFilter == '1 Bulan Terakhir',
+                onTap: () => setState(() => _activeTimeFilter = '1 Bulan Terakhir'),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          SectionHeader(
-            title: '${currentTransactions.length} transaksi ditemukan',
-            trailing: TextButton(
-              onPressed: () {
-                // TODO: Implement export functionality
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Fitur export akan segera hadir!'),
-                  ),
-                );
-              },
-              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-              child: const Text('Export'),
-            ),
-          ),
+          SectionHeader(title: '${currentTransactions.length} transaksi ditemukan'),
           const SizedBox(height: 12),
           if (currentTransactions.isEmpty)
             Padding(
