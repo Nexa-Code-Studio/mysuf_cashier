@@ -6,6 +6,7 @@ import '../widgets/section_header.dart';
 import 'ktp_scanner_screen.dart';
 import 'manual_nik_screen.dart';
 import 'qr_scanner_screen.dart';
+import '../utils/privacy.dart';
 
 class ScanScreen extends StatelessWidget {
   const ScanScreen({super.key});
@@ -119,7 +120,7 @@ class _RecentScanCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  item.nik,
+                  maskNik(item.nik),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),

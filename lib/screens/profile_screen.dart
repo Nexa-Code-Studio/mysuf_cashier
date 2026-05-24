@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import '../models/mock_data.dart';
 import '../theme/theme.dart';
 import '../widgets/profile_card.dart';
@@ -15,6 +16,34 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _notificationsEnabled = true;
   bool _autoSyncEnabled = true;
+
+  Future<void> _confirmLogout() async {
+    final bool? shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Keluar dari aplikasi?'),
+          content: const Text(
+            'Anda akan kembali ke halaman login dan perlu masuk lagi untuk melanjutkan.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout == true && mounted) {
+      await SessionScope.of(context).signOut();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             contentPadding: EdgeInsets.zero,
             title: const Text('Notifikasi'),
             value: _notificationsEnabled,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (value) => setState(() => _notificationsEnabled = value),
           ),
           const Divider(),
@@ -77,7 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             contentPadding: EdgeInsets.zero,
             title: const Text('Auto Sync'),
             value: _autoSyncEnabled,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: (value) => setState(() => _autoSyncEnabled = value),
           ),
           const SizedBox(height: 16),
@@ -87,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _buildTile('Bantuan & Dukungan'),
           const SizedBox(height: 20),
           OutlinedButton(
-            onPressed: () {},
+            onPressed: _confirmLogout,
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary),

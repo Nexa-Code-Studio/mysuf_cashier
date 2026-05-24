@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi memerlukan kamera untuk memindai QR dan E-KTP.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Aplikasi memerlukan NFC untuk membaca E-KTP.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

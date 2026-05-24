@@ -132,7 +132,7 @@ const List<ScanMethodItem> scanMethods = [
   ScanMethodItem(
     icon: Icons.perm_identity_outlined,
     title: 'Scan E-KTP',
-    subtitle: 'NFC atau kamera untuk E-KTP',
+    subtitle: 'Gunakan kamera dan NFC untuk E-KTP',
   ),
   ScanMethodItem(
     icon: Icons.keyboard_outlined,
