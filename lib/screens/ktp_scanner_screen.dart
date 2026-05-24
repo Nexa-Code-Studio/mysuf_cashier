@@ -12,12 +12,8 @@ class KtpScannerScreen extends StatefulWidget {
 
 class _KtpScannerScreenState extends State<KtpScannerScreen> {
   bool _isScanning = false;
-  String _statusText = 'Tempelkan E-KTP ke bagian belakang perangkat untuk membaca NFC.';
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  String _statusText =
+      'Tempelkan E-KTP ke bagian belakang perangkat untuk membaca NFC.';
 
   Future<void> _scanNfc() async {
     if (_isScanning) {
@@ -114,7 +110,7 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
       try {
         await FlutterNfcKit.finish(iosAlertMessage: 'Sesi NFC selesai');
       } catch (_) {
-        // Abaikan bila sesi belum aktif atau sudah ditutup sistem.
+        // Ignore if the session is already closed.
       }
 
       if (mounted) {
@@ -149,7 +145,9 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF181B1F),
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

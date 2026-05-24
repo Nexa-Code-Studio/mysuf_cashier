@@ -10,10 +10,10 @@ class SyncActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppColors.primary,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         children: [
@@ -22,18 +22,19 @@ class SyncActionCard extends StatelessWidget {
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w800,
+              letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             'Transaksi Menunggu Sinkronisasi',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.white.withOpacity(0.9),
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -49,9 +50,9 @@ class SyncActionCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),

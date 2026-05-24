@@ -32,6 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isBusy = SessionScope.of(context).isBusy;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -82,15 +84,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             'MySUF Cashier',
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                                  fontWeight: FontWeight.w800,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Masuk tanpa registrasi. Gunakan email operator yang sudah tersedia untuk membuka aplikasi kasir.',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                                  color: AppColors.textSecondary,
+                                ),
                           ),
                           const SizedBox(height: 24),
                           Form(
@@ -139,13 +141,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
-                                    onPressed: SessionScope.of(context).isBusy
-                                        ? null
-                                        : _signIn,
+                                    onPressed: isBusy ? null : _signIn,
                                     child: Text(
-                                      SessionScope.of(context).isBusy
-                                          ? 'Memproses Masuk...'
-                                          : 'Masuk ke Kasir',
+                                      isBusy ? 'Memproses Masuk...' : 'Masuk ke Kasir',
                                     ),
                                   ),
                                 ),
@@ -160,8 +158,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Scanner QR, NFC E-KTP, dan PIN e-wallet sudah aktif di aplikasi ini.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                            color: AppColors.textSecondary,
+                          ),
                     ),
                   ],
                 ),

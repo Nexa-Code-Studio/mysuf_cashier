@@ -5,6 +5,8 @@ import '../theme/theme.dart';
 import '../widgets/profile_card.dart';
 import '../widgets/section_header.dart';
 import '../widgets/stat_tile.dart';
+import 'performance_stat_screen.dart';
+import 'shift_schedule_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -50,24 +52,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     const double horizontalPadding = 20;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(horizontalPadding, 16, horizontalPadding, 32),
+      padding: const EdgeInsets.fromLTRB(
+        horizontalPadding,
+        16,
+        horizontalPadding,
+        32,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Profil Kasir',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 16),
           const ProfileCard(info: profileInfo),
           const SizedBox(height: 20),
           Text(
             'Statistik Hari Ini',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           GridView.count(
@@ -89,8 +96,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 20),
           const SectionHeader(title: 'Statistik'),
           const SizedBox(height: 8),
-          _buildTile('Performa Hari Ini'),
-          _buildTile('Waktu Shift'),
+          _buildTile(
+            'Performa Hari Ini',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const PerformanceStatScreen(),
+                ),
+              );
+            },
+          ),
+          _buildTile(
+            'Waktu Shift',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ShiftScheduleScreen()),
+              );
+            },
+          ),
           const SizedBox(height: 16),
           const SectionHeader(title: 'Pengaturan'),
           const SizedBox(height: 8),
@@ -120,9 +145,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               side: const BorderSide(color: AppColors.primary),
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: const SizedBox(
@@ -141,15 +166,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   'SPBU POS System v1.0.0',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Copyright 2026',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -159,14 +184,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildTile(String title) {
+  Widget _buildTile(String title, {VoidCallback? onTap}) {
     return Column(
       children: [
         ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(title),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {},
+          onTap: onTap,
         ),
         const Divider(),
       ],

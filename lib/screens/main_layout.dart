@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../app_session.dart';
-import '../theme/theme.dart';
 import '../widgets/pos_app_bar.dart';
 import 'profile_screen.dart';
 import 'scan_screen.dart';
@@ -36,29 +35,29 @@ class _MainLayoutState extends State<MainLayout> {
       body: SafeArea(
         child: IndexedStack(index: _currentIndex, children: _screens),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        items: const [
-          BottomNavigationBarItem(
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.qr_code_scanner_outlined),
+            selectedIcon: Icon(Icons.qr_code_scanner),
             label: 'Scan',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
-            label: 'Transactions',
+            selectedIcon: Icon(Icons.receipt_long),
+            label: 'Riwayat',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.sync_outlined),
+            selectedIcon: Icon(Icons.sync),
             label: 'Sync',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
-            label: 'Profile',
+            selectedIcon: Icon(Icons.person),
+            label: 'Profil',
           ),
         ],
       ),

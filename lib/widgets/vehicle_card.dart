@@ -11,11 +11,11 @@ class VehicleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8E8E8)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -24,21 +24,21 @@ class VehicleCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   vehicle.type.toLowerCase() == 'motor'
-                      ? Icons.motorcycle_outlined
-                      : Icons.directions_car_outlined,
-                  color: Colors.white,
-                  size: 20,
+                      ? Icons.motorcycle_rounded
+                      : Icons.directions_car_rounded,
+                  color: AppColors.primary,
+                  size: 22,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -24,7 +24,6 @@ class _MyAppState extends State<MyApp> {
     _session = AppSession();
   }
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return SessionScope(
@@ -78,9 +77,10 @@ class _MyAppState extends State<MyApp> {
                                 _session.isAuthenticated
                                     ? 'Memproses logout...'
                                     : 'Memproses login...',
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                             ],
                           ),

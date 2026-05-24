@@ -113,10 +113,11 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           'Posisikan QR di dalam bingkai',
-                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                         ),
                       ),
                     ),
@@ -142,7 +143,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.12)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -151,17 +153,17 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                         'Scan kamera aktif. Arahkan QR pengguna ke kotak panduan.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontWeight: FontWeight.w600,
-                        ),
+                              color: Colors.white.withValues(alpha: 0.92),
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         'Begitu QR terbaca, sistem langsung lanjut ke data kendaraan.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.72),
-                        ),
+                              color: Colors.white.withValues(alpha: 0.72),
+                            ),
                       ),
                     ],
                   ),

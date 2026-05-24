@@ -17,6 +17,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Scan'), findsOneWidget);
-    expect(find.text('Transactions'), findsOneWidget);
+    expect(find.text('Riwayat'), findsOneWidget);
   });
 }
