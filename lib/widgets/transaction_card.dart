@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/mock_data.dart';
+import '../models/cashier_history_models.dart';
 import '../theme/theme.dart';
 import 'status_badge.dart';
 import '../utils/privacy.dart';
 
 class TransactionCard extends StatelessWidget {
-  final TransactionItem item;
+  final CashierTransactionItem item;
 
   const TransactionCard({super.key, required this.item});
 

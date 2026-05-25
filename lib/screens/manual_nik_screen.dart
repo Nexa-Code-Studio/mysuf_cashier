@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../app_session.dart';
 import '../theme/theme.dart';
 import 'vehicle_selection_screen.dart';
+import '../cashier/cashier_buyer_repository.dart';
 
 class ManualNikScreen extends StatefulWidget {
   const ManualNikScreen({super.key});
@@ -12,7 +14,9 @@ class ManualNikScreen extends StatefulWidget {
 
 class _ManualNikScreenState extends State<ManualNikScreen> {
   final TextEditingController _controller = TextEditingController();
+  final CashierBuyerRepository _buyerRepository = CashierBuyerRepository();
   bool _isValid = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -64,22 +68,47 @@ class _ManualNikScreenState extends State<ManualNikScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isValid
-                    ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const VehicleSelectionScreen(),
-                          ),
-                        );
+                onPressed: _isValid && !_isLoading
+                    ? () async {
+                        setState(() => _isLoading = true);
+                        try {
+                          final lookupResult = await _buyerRepository.lookupBuyerByNfc(_controller.text.trim());
+                          if (!mounted) return;
+                          SessionScope.of(context).bumpCashierDataRevision();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VehicleSelectionScreen(lookupResult: lookupResult),
+                            ),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          SessionScope.of(context).bumpCashierDataRevision();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Gagal mencari data: ${e.toString().replaceFirst('Exception: ', '')}'),
+                              backgroundColor: Colors.red[800],
+                            ),
+                          );
+                        } finally {
+                          if (mounted) {
+                            setState(() => _isLoading = false);
+                          }
+                        }
                       }
                     : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _isValid ? AppColors.primary : Colors.grey,
                 ),
-                child: const Text('Cari Data'),
+                child: Text(_isLoading ? 'Mencari...' : 'Cari Data'),
               ),
             ),
+            if (_isLoading) ...[
+              const SizedBox(height: 20),
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ],
           ],
         ),
       ),

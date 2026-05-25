@@ -27,7 +27,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final AppSession session = SessionScope.of(context);
-    await session.signIn(email: _emailController.text.trim());
+    try {
+      await session.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
   }
 
   @override
@@ -83,16 +97,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 20),
                           Text(
                             'MySUF Cashier',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Masuk tanpa registrasi. Gunakan email operator yang sudah tersedia untuk membuka aplikasi kasir.',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
+                            'Masuk menggunakan akun operator SPBU yang sudah terdaftar di backend MySUF.',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           Form(

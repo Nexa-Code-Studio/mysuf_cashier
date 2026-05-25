@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/mock_data.dart';
+import '../models/cashier_buyer_lookup.dart';
 import '../theme/theme.dart';
 
 class VehicleCard extends StatelessWidget {
-  final VehicleItem vehicle;
+  final CashierVehicleInfo vehicle;
   final VoidCallback onSelect;
 
   const VehicleCard({super.key, required this.vehicle, required this.onSelect});
@@ -27,11 +27,17 @@ class VehicleCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.08),
+                  color: AppColors.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
-                  vehicle.type.toLowerCase() == 'motor'
+                  vehicle.vehicleDisplayType.toLowerCase().contains('vario') ||
+                          vehicle.vehicleDisplayType.toLowerCase().contains(
+                            'nmax',
+                          ) ||
+                          vehicle.vehicleDisplayType.toLowerCase().contains(
+                            'motor',
+                          )
                       ? Icons.motorcycle_rounded
                       : Icons.directions_car_rounded,
                   color: AppColors.primary,
@@ -44,14 +50,14 @@ class VehicleCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      vehicle.plate,
+                      vehicle.plateNumber,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      vehicle.type,
+                      vehicle.vehicleDisplayType,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -78,6 +84,13 @@ class VehicleCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'Warna: ${vehicle.color}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'No. STNK: ${vehicle.registrationNumber}',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
