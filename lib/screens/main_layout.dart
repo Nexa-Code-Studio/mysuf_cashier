@@ -3,7 +3,6 @@ import '../app_session.dart';
 import '../widgets/pos_app_bar.dart';
 import 'profile_screen.dart';
 import 'scan_screen.dart';
-import 'sync_screen.dart';
 import 'transactions_screen.dart';
 
 class MainLayout extends StatefulWidget {
@@ -19,7 +18,6 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _screens = const [
     ScanScreen(),
     TransactionsScreen(),
-    SyncScreen(),
     ProfileScreen(),
   ];
 
@@ -47,11 +45,6 @@ class _MainLayoutState extends State<MainLayout> {
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long),
             label: 'Riwayat',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.sync_outlined),
-            selectedIcon: Icon(Icons.sync),
-            label: 'Sync',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

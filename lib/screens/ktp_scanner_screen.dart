@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
+import '../app_session.dart';
+import '../cashier/cashier_buyer_repository.dart';
 import 'vehicle_selection_screen.dart';
 
 class KtpScannerScreen extends StatefulWidget {
@@ -11,6 +13,7 @@ class KtpScannerScreen extends StatefulWidget {
 }
 
 class _KtpScannerScreenState extends State<KtpScannerScreen> {
+  final CashierBuyerRepository _buyerRepository = CashierBuyerRepository();
   bool _isScanning = false;
   String _statusText =
       'Tempelkan E-KTP ke bagian belakang perangkat untuk membaca NFC.';
@@ -40,13 +43,14 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
           return;
         }
 
-        final String availabilityMessage = availability == NFCAvailability.disabled
+        final String availabilityMessage =
+            availability == NFCAvailability.disabled
             ? 'NFC di perangkat ini sedang nonaktif. Aktifkan NFC di pengaturan lalu coba lagi.'
             : 'Perangkat ini tidak mendukung NFC. Gunakan ponsel fisik yang punya NFC.';
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(availabilityMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(availabilityMessage)));
         setState(() {
           _statusText = availabilityMessage;
         });
@@ -57,7 +61,7 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
         timeout: const Duration(seconds: 20),
         androidCheckNDEF: false,
         androidPlatformSound: false,
-        androidReaderModeFlags: 0x80 | 0x100,
+        androidReaderModeFlags: 0x1F | 0x80 | 0x100,
         iosAlertMessage: 'Tempelkan E-KTP ke belakang perangkat',
       );
 
@@ -67,11 +71,22 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
 
       final String tagId = tag?.id?.toString() ?? '';
       final String maskedTagId = tagId.isEmpty ? '' : _maskNfcValue(tagId);
+      if (tagId.isEmpty) {
+        throw Exception('Serial number NFC tidak ditemukan dari E-KTP.');
+      }
+
       setState(() {
         _statusText = maskedTagId.isEmpty
             ? 'NFC E-KTP terbaca dengan sukses.'
             : 'NFC E-KTP terbaca: $maskedTagId';
       });
+
+      final lookupResult = await _buyerRepository.lookupBuyerByNfc(tagId);
+      if (!mounted) {
+        return;
+      }
+
+      SessionScope.of(context).bumpCashierDataRevision();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -91,7 +106,9 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const VehicleSelectionScreen()),
+        MaterialPageRoute(
+          builder: (_) => VehicleSelectionScreen(lookupResult: lookupResult),
+        ),
       );
     } on PlatformException catch (error) {
       if (!mounted) {
@@ -103,6 +120,19 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
       );
       setState(() {
         _statusText = 'NFC belum berhasil dibaca. Coba tempelkan kartu lagi.';
+      });
+    } on Exception catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      final message = error.toString().replaceFirst('Exception: ', '');
+      SessionScope.of(context).bumpCashierDataRevision();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      setState(() {
+        _statusText = message;
       });
     } catch (_) {
       if (!mounted) {
@@ -177,7 +207,8 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
                       const SizedBox(height: 20),
                       Text(
                         'NFC E-KTP',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w800,
                             ),
@@ -187,8 +218,8 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
                         _statusText,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
                       ),
                       const SizedBox(height: 18),
                       if (isBusy)
@@ -217,8 +248,8 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
                 'Tempelkan kartu ke area NFC perangkat. Kamera tidak digunakan pada layar ini.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.72),
-                    ),
+                  color: Colors.white.withValues(alpha: 0.72),
+                ),
               ),
             ],
           ),

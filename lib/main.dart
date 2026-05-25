@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'app_session.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_layout.dart';
+import 'screens/splash_screen.dart';
 import 'theme/theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -22,6 +24,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _session = AppSession();
+    _session.bootstrap();
   }
 
   @override
@@ -39,7 +42,9 @@ class _MyAppState extends State<MyApp> {
                   debugShowCheckedModeBanner: false,
                   title: 'MySUF Cashier',
                   theme: AppTheme.lightTheme(),
-                  home: _session.isAuthenticated
+                  home: _session.isInitializing
+                      ? const SplashScreen()
+                      : _session.isAuthenticated
                       ? const MainLayout()
                       : const LoginScreen(),
                 ),

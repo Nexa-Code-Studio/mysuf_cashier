@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../app_session.dart';
 import 'vehicle_selection_screen.dart';
+import '../cashier/cashier_buyer_repository.dart';
+import '../utils/qr_payload_decoder.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -39,14 +42,34 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       return;
     }
 
+    final String qrValue = QrPayloadDecoder.decodeOrRaw(rawValue);
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('QR terdeteksi: $rawValue')),
+      SnackBar(content: Text('QR terdeteksi: $qrValue')),
     );
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const VehicleSelectionScreen()),
-    );
+    try {
+      final repository = CashierBuyerRepository();
+      final lookupResult = await repository.lookupBuyerByNfc(qrValue);
+      if (!mounted) return;
+      SessionScope.of(context).bumpCashierDataRevision();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => VehicleSelectionScreen(lookupResult: lookupResult)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      SessionScope.of(context).bumpCashierDataRevision();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mencari data dari QR: ${e.toString().replaceFirst("Exception: ", "")}'),
+          backgroundColor: Colors.red[800],
+        ),
+      );
+      // Resume scanner if failed
+      _hasHandledScan = false;
+      _controller.start();
+    }
   }
 
   @override
