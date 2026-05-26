@@ -27,6 +27,10 @@ class PaymentScreen extends StatelessWidget {
     return 'Rp ${buffer.toString()}';
   }
 
+  String _formatLiters(double value) {
+    return '${value.toStringAsFixed(2).replaceAll('.', ',')} Liter';
+  }
+
   void _completeTransaction(BuildContext context) {
     SessionScope.of(context).bumpCashierDataRevision();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -175,10 +179,46 @@ class PaymentScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   _InfoRow(label: 'Jenis BBM', value: draft.fuel),
                   const SizedBox(height: 12),
-                  _InfoRow(
-                    label: 'Jumlah',
-                    value: '${draft.liters.toStringAsFixed(2)} Liter',
-                  ),
+                  _InfoRow(label: 'Jumlah', value: _formatLiters(draft.liters)),
+                  if (draft.pricingBreakdown.isSubsidizedFuel) ...[
+                    const SizedBox(height: 12),
+                    _InfoRow(
+                      label: 'Porsi Subsidi',
+                      value: draft.pricingBreakdown.subsidizedLiters > 0
+                          ? _formatLiters(
+                              draft.pricingBreakdown.subsidizedLiters,
+                            )
+                          : '0,00 Liter',
+                    ),
+                    const SizedBox(height: 12),
+                    _InfoRow(
+                      label: 'Porsi Normal',
+                      value: draft.pricingBreakdown.nonSubsidizedLiters > 0
+                          ? _formatLiters(
+                              draft.pricingBreakdown.nonSubsidizedLiters,
+                            )
+                          : '0,00 Liter',
+                    ),
+                    if (draft.pricingBreakdown.usesMixedPricing) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        'Kuota subsidi dipakai lebih dulu, lalu sisanya dihitung dengan harga normal.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ] else if (draft.pricingBreakdown.usesMarketPriceOnly) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        draft.pricingBreakdown.isEligibleForSubsidy
+                            ? 'Kuota subsidi sudah habis, jadi transaksi ini memakai harga normal.'
+                            : 'KK tidak layak subsidi, jadi transaksi ini memakai harga normal.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
                   const Divider(height: 24),
                   Row(
                     children: [
