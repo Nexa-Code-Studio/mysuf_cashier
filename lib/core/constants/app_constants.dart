@@ -9,7 +9,7 @@ class AppConstants {
       ? 'http://localhost:8080/api/v1'
       : String.fromEnvironment(
           'MYSUF_API_BASE_URL',
-          defaultValue: 'https://api.smkn1wringin.sch.id/api/v1',
+          defaultValue: 'https://mysuf.nexacode.dev/api/v1',
         );
   static const String cashierClientType = 'POS_ANDROID';
   static const String qrisSecretKey = 'YTAU!@*@!^18728yLAHD{:{{';
