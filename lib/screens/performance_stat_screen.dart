@@ -164,8 +164,8 @@ class _PerformanceStatScreenState extends State<PerformanceStatScreen> {
                     childAspectRatio: 1.2,
                     children: [
                       _StatBox(
-                        title: 'Kendaraan Dilayani',
-                        value: '${summary?.servedVehicles ?? 0} Kendaraan',
+                        title: 'Transaksi Sukses',
+                        value: '${summary?.completedTransactions ?? 0} Transaksi',
                       ),
                       _StatBox(
                         title: 'Total Volume BBM',

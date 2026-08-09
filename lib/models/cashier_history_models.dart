@@ -101,6 +101,7 @@ class CashierTransactionItem {
     required this.total,
     required this.payment,
     required this.cashier,
+    this.buyerFotoKtpUrl,
   });
 
   final String id;
@@ -115,6 +116,7 @@ class CashierTransactionItem {
   final String total;
   final String payment;
   final String cashier;
+  final String? buyerFotoKtpUrl;
 
   factory CashierTransactionItem.fromJson(Map<String, dynamic> json) {
     final statusRaw = (json['transaction_status'] ?? json['status'] ?? '')
@@ -149,6 +151,7 @@ class CashierTransactionItem {
       total: formatCurrencyValue(totalValue),
       payment: json['payment_method']?.toString() ?? '-',
       cashier: json['cashier_name']?.toString() ?? '-',
+      buyerFotoKtpUrl: json['buyer_foto_ktp_url']?.toString(),
     );
   }
 }

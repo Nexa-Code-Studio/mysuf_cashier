@@ -28,6 +28,7 @@ class TransactionInputScreen extends StatefulWidget {
 class _TransactionInputScreenState extends State<TransactionInputScreen> {
   final CashierBuyerRepository _repository = CashierBuyerRepository();
   final TextEditingController _inputController = TextEditingController();
+  final TextEditingController _plateController = TextEditingController();
 
   List<Map<String, dynamic>> _fuelTypes = [];
   Map<String, dynamic>? _selectedFuelType;
@@ -41,12 +42,20 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
   @override
   void initState() {
     super.initState();
+    _plateController.text = widget.vehicle.plateNumber;
+    _plateController.addListener(_onPlateChanged);
     _inputController.addListener(_handleInputChange);
     _loadFuels();
   }
 
+  void _onPlateChanged() {
+    setState(() {});
+  }
+
   @override
   void dispose() {
+    _plateController.removeListener(_onPlateChanged);
+    _plateController.dispose();
     _inputController.removeListener(_handleInputChange);
     _inputController.dispose();
     super.dispose();
@@ -143,12 +152,12 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
 
   String get _statusDetail {
     if (!_isEligibleForSubsidy) {
-      return 'Kendaraan tetap bisa membeli BBM, tetapi seluruh liter akan dihitung dengan harga normal.';
+      return 'Warga tetap bisa membeli BBM, tetapi seluruh liter akan dihitung dengan harga normal.';
     }
     if (_hasRemainingQuota) {
       return 'Sisa kuota ${_remainingQuota.toStringAsFixed(2).replaceAll('.', ',')} Liter. Kuota subsidi akan dipakai lebih dulu.';
     }
-    return 'Kendaraan tetap bisa membeli BBM, tetapi seluruh liter akan dihitung dengan harga normal.';
+    return 'Warga tetap bisa membeli BBM, tetapi seluruh liter akan dihitung dengan harga normal.';
   }
 
   Color get _statusColor {
@@ -208,7 +217,10 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
     _handleInputChange();
   }
 
-  bool get _canProceed => _liters > 0 && _selectedFuelType != null;
+  bool get _canProceed =>
+      _liters > 0 &&
+      _selectedFuelType != null &&
+      _plateController.text.trim().isNotEmpty;
 
   String _formatCurrency(int value) {
     final String raw = value.toString();
@@ -281,14 +293,23 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Kendaraan',
+                    'Plat Nomor Kendaraan',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.vehicle.plateNumber,
+                  const SizedBox(height: 4),
+                  TextFormField(
+                    controller: _plateController,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: const InputDecoration(
+                      hintText: 'Contoh: N 1234 AB',
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -614,7 +635,7 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                         final TransactionDraft draft = TransactionDraft(
                           userName: buyerName,
                           userNik: buyerNik,
-                          plate: widget.vehicle.plateNumber,
+                          plate: _plateController.text.trim().toUpperCase(),
                           fuel: _selectedFuelType?['name'] ?? '-',
                           fuelTypeId: _selectedFuelType?['id'] ?? '',
                           liters: _liters,

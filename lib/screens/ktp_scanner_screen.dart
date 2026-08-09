@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
 import '../app_session.dart';
 import '../cashier/cashier_buyer_repository.dart';
-import 'vehicle_selection_screen.dart';
+import '../models/cashier_buyer_lookup.dart';
+import 'transaction_input_screen.dart';
 
 class KtpScannerScreen extends StatefulWidget {
   const KtpScannerScreen({super.key});
@@ -107,7 +108,12 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => VehicleSelectionScreen(lookupResult: lookupResult),
+          builder: (_) => TransactionInputScreen(
+            vehicle: CashierVehicleInfo.fromPersonalBuyer(lookupResult.buyer),
+            buyerName: lookupResult.buyer.name,
+            buyerNik: lookupResult.buyer.nikSnapshot,
+            isPinActive: lookupResult.buyer.isPinActive,
+          ),
         ),
       );
     } on PlatformException catch (error) {

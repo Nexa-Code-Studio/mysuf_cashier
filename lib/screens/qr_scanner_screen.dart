@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../app_session.dart';
-import 'vehicle_selection_screen.dart';
+import '../models/cashier_buyer_lookup.dart';
+import 'transaction_input_screen.dart';
 import '../cashier/cashier_buyer_repository.dart';
 import '../utils/qr_payload_decoder.dart';
 
@@ -55,7 +56,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       SessionScope.of(context).bumpCashierDataRevision();
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => VehicleSelectionScreen(lookupResult: lookupResult)),
+        MaterialPageRoute(
+          builder: (_) => TransactionInputScreen(
+            vehicle: CashierVehicleInfo.fromPersonalBuyer(lookupResult.buyer),
+            buyerName: lookupResult.buyer.name,
+            buyerNik: lookupResult.buyer.nikSnapshot,
+            isPinActive: lookupResult.buyer.isPinActive,
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -182,7 +190,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Begitu QR terbaca, sistem langsung lanjut ke data kendaraan.',
+                        'Begitu QR terbaca, sistem langsung lanjut ke data transaksi.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.white.withValues(alpha: 0.72),

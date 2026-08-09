@@ -1,17 +1,36 @@
-# mysuf_cashier
+# MySuF Cashier (POS Application)
 
-A new Flutter project.
+Aplikasi POS / Kasir untuk ekosistem **MySuF (Smart Subsidized Fuel Ecosystem)**.
 
-## Getting Started
+## 🛠️ Langkah Menjalankan Aplikasi
 
-This project is a starting point for a Flutter application.
+### 1. Sinkronisasi Port Android (ADB Reverse)
+Sebelum menjalankan aplikasi di Emulator Android, sambungkan port local agar request localhost dapat diteruskan:
+```bash
+adb reverse tcp:8080 tcp:8080
+```
 
-A few resources to get you started if this is your first Flutter project:
+### 2. Dapatkan Dependensi Flutter
+```bash
+flutter pub get
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+### 3. Jalankan Aplikasi (Pilihan Environment API)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+*   **Mode Staging / Produksi (Default)**
+    Menghubungkan secara otomatis ke server staging cloud:
+    ```bash
+    flutter run
+    ```
+
+*   **Mode Localhost (Development)**
+    Gunakan flag `--dart-define=USE_LOCALHOST=true` untuk mengarahkan koneksi ke localhost backend (`http://localhost:8080/api/v1`):
+    ```bash
+    flutter run --dart-define=USE_LOCALHOST=true
+    ```
+
+*   **Custom API URL**
+    Menggunakan custom IP atau port tertentu:
+    ```bash
+    flutter run --dart-define=MYSUF_API_BASE_URL=http://10.0.2.2:8080/api/v1
+    ```
