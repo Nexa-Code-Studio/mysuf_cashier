@@ -28,6 +28,10 @@ class CashierBuyerInfo {
     required this.verificationStatus,
     required this.riskScore,
     this.isPinActive = false,
+    this.quotaLiters = 0.0,
+    this.usedLiters = 0.0,
+    this.remainingLiters = 0.0,
+    this.isEligible = false,
   });
 
   final String buyerProfileId;
@@ -37,6 +41,10 @@ class CashierBuyerInfo {
   final String verificationStatus;
   final double riskScore;
   final bool isPinActive;
+  final double quotaLiters;
+  final double usedLiters;
+  final double remainingLiters;
+  final bool isEligible;
 
   factory CashierBuyerInfo.fromJson(Map<String, dynamic> json) {
     return CashierBuyerInfo(
@@ -47,6 +55,10 @@ class CashierBuyerInfo {
       verificationStatus: json['verification_status']?.toString() ?? '-',
       riskScore: (json['risk_score'] as num?)?.toDouble() ?? 0,
       isPinActive: json['is_pin_active'] as bool? ?? false,
+      quotaLiters: (json['quota_liters'] as num?)?.toDouble() ?? 0.0,
+      usedLiters: (json['used_liters'] as num?)?.toDouble() ?? 0.0,
+      remainingLiters: (json['remaining_liters'] as num?)?.toDouble() ?? 0.0,
+      isEligible: json['is_eligible'] as bool? ?? false,
     );
   }
 }
@@ -70,6 +82,27 @@ class CashierVehicleInfo {
     this.usedLiters = 0.0,
     this.remainingLiters = 0.0,
   });
+
+  factory CashierVehicleInfo.fromPersonalBuyer(CashierBuyerInfo buyer) {
+    return CashierVehicleInfo(
+      ownershipId: '',
+      vehicleId: '',
+      plateNumber: 'KTP',
+      registrationNumber: '-',
+      typeLabel: 'Subsidi Personal',
+      category: 'PERSONAL',
+      ownershipStatus: 'ACTIVE',
+      usageType: 'PERSONAL',
+      brand: '-',
+      vehicleType: '-',
+      color: '-',
+      manufactureYear: null,
+      isEligible: buyer.isEligible,
+      quotaLiters: buyer.quotaLiters,
+      usedLiters: buyer.usedLiters,
+      remainingLiters: buyer.remainingLiters,
+    );
+  }
 
   final String ownershipId;
   final String vehicleId;

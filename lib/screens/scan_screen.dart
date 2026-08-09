@@ -7,8 +7,6 @@ import '../theme/theme.dart';
 import '../widgets/menu_card.dart';
 import '../widgets/section_header.dart';
 import 'ktp_scanner_screen.dart';
-import 'manual_nik_screen.dart';
-import 'qr_scanner_screen.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -117,47 +115,26 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Pilih metode identifikasi pengguna',
+                    'Identifikasi Pengguna',
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: verticalSpacing),
-                  ...scanMethods.asMap().entries.map(
-                    (entry) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: MenuCard(
-                        icon: entry.value.icon,
-                        title: entry.value.title,
-                        subtitle: entry.value.subtitle,
-                        onTap: () {
-                          switch (entry.key) {
-                            case 0:
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const QrScannerScreen(),
-                                ),
-                              );
-                              break;
-                            case 1:
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const KtpScannerScreen(),
-                                ),
-                              );
-                              break;
-                            default:
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const ManualNikScreen(),
-                                ),
-                              );
-                          }
-                        },
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: MenuCard(
+                      icon: Icons.contact_emergency_outlined,
+                      title: 'Scan E-KTP / Kartu NFC',
+                      subtitle: 'Tempelkan E-KTP atau kartu NFC kendaraan',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const KtpScannerScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 8),

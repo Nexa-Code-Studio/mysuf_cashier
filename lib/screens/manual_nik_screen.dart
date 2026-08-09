@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../app_session.dart';
 import '../theme/theme.dart';
-import 'vehicle_selection_screen.dart';
+import '../models/cashier_buyer_lookup.dart';
+import 'transaction_input_screen.dart';
 import '../cashier/cashier_buyer_repository.dart';
 
 class ManualNikScreen extends StatefulWidget {
@@ -78,7 +79,12 @@ class _ManualNikScreenState extends State<ManualNikScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => VehicleSelectionScreen(lookupResult: lookupResult),
+                              builder: (_) => TransactionInputScreen(
+                                vehicle: CashierVehicleInfo.fromPersonalBuyer(lookupResult.buyer),
+                                buyerName: lookupResult.buyer.name,
+                                buyerNik: lookupResult.buyer.nikSnapshot,
+                                isPinActive: lookupResult.buyer.isPinActive,
+                              ),
                             ),
                           );
                         } catch (e) {

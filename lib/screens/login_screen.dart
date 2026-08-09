@@ -165,6 +165,32 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    onPressed: isBusy
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              _emailController.text =
+                                                  'so@mysuf.id';
+                                              _passwordController.text =
+                                                  'mysuf123';
+                                            });
+                                          },
+                                    icon: const Icon(Icons.auto_awesome,
+                                        size: 18),
+                                    label: const Text('Autofill Akun Demo'),
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.primary,
+                                      side: const BorderSide(
+                                          color: AppColors.primary),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
