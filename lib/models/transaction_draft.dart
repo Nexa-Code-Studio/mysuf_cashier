@@ -10,6 +10,7 @@ class FuelPricingBreakdown {
     required this.subsidizedPricePerLiter,
     required this.isSubsidizedFuel,
     required this.isEligibleForSubsidy,
+    this.accountStatus = 'ACTIVE',
   });
 
   final double liters;
@@ -20,8 +21,10 @@ class FuelPricingBreakdown {
   final double? subsidizedPricePerLiter;
   final bool isSubsidizedFuel;
   final bool isEligibleForSubsidy;
+  final String accountStatus;
 
   factory FuelPricingBreakdown.fromJson(Map<String, dynamic> json) {
+    final status = json['account_status'] as String? ?? 'ACTIVE';
     return FuelPricingBreakdown(
       liters: (json['total_liters'] as num?)?.toDouble() ?? 0.0,
       totalAmount: (json['total_amount'] as num?)?.toInt() ?? 0,
@@ -30,7 +33,8 @@ class FuelPricingBreakdown {
       marketPricePerLiter: (json['price_per_liter_market'] as num?)?.toDouble() ?? 0.0,
       subsidizedPricePerLiter: (json['price_per_liter_subsidy'] as num?)?.toDouble(),
       isSubsidizedFuel: json['price_per_liter_subsidy'] != null,
-      isEligibleForSubsidy: json['account_status'] == 'ACTIVE',
+      isEligibleForSubsidy: status == 'ACTIVE',
+      accountStatus: status,
     );
   }
 

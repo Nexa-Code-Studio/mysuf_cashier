@@ -68,7 +68,7 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
   }
 
   void _onPlateChanged() {
-    _triggerPricingCalculation();
+    _calculatePricingLocal();
   }
 
   @override
@@ -101,77 +101,14 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
 
   double get _remainingQuota => widget.vehicle.remainingLiters;
 
-  /// The account_status enum string from the backend. Single source of truth.
-  /// Values: 'ACTIVE' | 'FROZEN' | 'BANNED' | 'NOT_ELIGIBLE' | 'QUOTA_EXHAUSTED'
-  String get _accountStatus => widget.buyer?.accountStatus ?? 'ACTIVE';
+  String get _accountStatus =>
+      _backendPricing?.accountStatus ??
+      widget.buyer?.accountStatus ??
+      'ACTIVE';
 
 
   bool get _selectedFuelTypeIsSubsidized =>
       _selectedFuelType?['subsidy_type'] == 'SUBSIDIZED';
-
-  void _triggerPricingCalculation() {
-    if (_debounceTimer?.isActive ?? false) _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      _calculatePricingBackend();
-    });
-  }
-
-  Future<void> _calculatePricingBackend() async {
-    final String text = _inputController.text.trim();
-    final fuel = _selectedFuelType;
-    if (fuel == null || text.isEmpty) {
-      setState(() {
-        _liters = 0.0;
-        _totalPrice = 0;
-        _backendPricing = null;
-      });
-      return;
-    }
-
-    double nominal = 0.0;
-    if (_isInputLiters) {
-      final String sanitizedText = text.replaceAll(',', '.');
-      nominal = double.tryParse(sanitizedText) ?? 0.0;
-    } else {
-      nominal = (int.tryParse(text) ?? 0).toDouble();
-    }
-
-    if (nominal <= 0) {
-      setState(() {
-        _liters = 0.0;
-        _totalPrice = 0;
-        _backendPricing = null;
-      });
-      return;
-    }
-
-    setState(() {
-      _isCalculatingPricing = true;
-    });
-
-    try {
-      final pricing = await _repository.calculatePricing(
-        nik: widget.buyerNik ?? '',
-        fuelTypeId: fuel['id'],
-        calcType: _isInputLiters ? 'LITERS' : 'AMOUNT',
-        nominal: nominal,
-        plateNumber: _plateController.text,
-      );
-
-      setState(() {
-        _backendPricing = pricing;
-        _liters = pricing.liters;
-        _totalPrice = pricing.totalAmount;
-        _isCalculatingPricing = false;
-        _errorMessage = null;
-      });
-    } catch (e) {
-      setState(() {
-        _isCalculatingPricing = false;
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      });
-    }
-  }
 
   FuelPricingBreakdown? get _pricingBreakdown => _backendPricing;
 
@@ -249,7 +186,8 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
       case 'BANNED':          return 'Akun KTP diblokir permanen, jadi seluruh transaksi memakai harga normal.';
       case 'FROZEN':          return 'Akun KTP dibekukan sementara, jadi seluruh transaksi memakai harga normal.';
       case 'NOT_ELIGIBLE':    return 'KK tidak layak subsidi (penghasilan melebihi batas), jadi seluruh transaksi memakai harga normal.';
-      default:                return 'Kuota subsidi sudah habis, jadi seluruh transaksi memakai harga normal.';
+      case 'QUOTA_EXHAUSTED': return 'Kuota subsidi sudah habis, jadi seluruh transaksi memakai harga normal.';
+      default:                return '';
     }
   }
 
@@ -263,7 +201,75 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
       });
       return;
     }
-    _triggerPricingCalculation();
+    _calculatePricingLocal();
+  }
+
+  void _calculatePricingLocal() {
+    final String text = _inputController.text.trim();
+    final fuel = _selectedFuelType;
+    if (fuel == null || text.isEmpty) {
+      setState(() {
+        _liters = 0.0;
+        _totalPrice = 0;
+        _backendPricing = null;
+      });
+      return;
+    }
+
+    double nominal = 0.0;
+    if (_isInputLiters) {
+      final String sanitizedText = text.replaceAll(',', '.');
+      nominal = double.tryParse(sanitizedText) ?? 0.0;
+    } else {
+      nominal = (int.tryParse(text) ?? 0).toDouble();
+    }
+
+    if (nominal <= 0) {
+      setState(() {
+        _liters = 0.0;
+        _totalPrice = 0;
+        _backendPricing = null;
+      });
+      return;
+    }
+
+    final double marketPrice = ((fuel['price_per_liter'] as num?) ?? 0).toDouble();
+    final double? subsidyPrice = (fuel['subsidy_price_per_liter'] as num?)?.toDouble();
+    final bool isSubsidizedFuel = fuel['subsidy_type'] == 'SUBSIDIZED';
+    final String status = widget.buyer?.accountStatus ?? 'ACTIVE';
+    final bool isEligibleForSubsidy = status == 'ACTIVE';
+    final double remainingQuota = (widget.buyer != null && widget.buyer!.remainingLiters > 0)
+        ? widget.buyer!.remainingLiters
+        : widget.vehicle.remainingLiters;
+
+    FuelPricingBreakdown pricing;
+    if (_isInputLiters) {
+      pricing = FuelPricingBreakdown.fromLiters(
+        liters: nominal,
+        marketPricePerLiter: marketPrice,
+        subsidizedPricePerLiter: subsidyPrice,
+        isSubsidizedFuel: isSubsidizedFuel,
+        isEligibleForSubsidy: isEligibleForSubsidy,
+        remainingQuota: remainingQuota,
+      );
+    } else {
+      pricing = FuelPricingBreakdown.fromAmount(
+        amount: nominal.round(),
+        marketPricePerLiter: marketPrice,
+        subsidizedPricePerLiter: subsidyPrice,
+        isSubsidizedFuel: isSubsidizedFuel,
+        isEligibleForSubsidy: isEligibleForSubsidy,
+        remainingQuota: remainingQuota,
+      );
+    }
+
+    setState(() {
+      _backendPricing = pricing;
+      _liters = pricing.liters;
+      _totalPrice = pricing.totalAmount;
+      _isCalculatingPricing = false;
+      _errorMessage = null;
+    });
   }
 
   void _selectFuelType(Map<String, dynamic> fuelType) {
@@ -491,7 +497,7 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                           _backendPricing = null;
                         }
                       });
-                      _triggerPricingCalculation();
+                      _calculatePricingLocal();
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: _isInputLiters
@@ -536,7 +542,7 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                           _backendPricing = null;
                         }
                       });
-                      _triggerPricingCalculation();
+                      _calculatePricingLocal();
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: !_isInputLiters
@@ -666,7 +672,8 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                             '${pricing.nonSubsidizedLiters.toStringAsFixed(2).replaceAll('.', ',')} L x ${_formatCurrency(pricing.marketPricePerLiter.round())}',
                       ),
                     if (_selectedFuelTypeIsSubsidized &&
-                        pricing.usesMarketPriceOnly) ...[
+                        pricing.usesMarketPriceOnly &&
+                        _getPricingWarningText().isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
                         _getPricingWarningText(),
