@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import '../cashier/cashier_buyer_repository.dart';
 import '../models/cashier_buyer_lookup.dart';
 import '../models/mock_data.dart';
@@ -12,6 +13,7 @@ class TransactionInputScreen extends StatefulWidget {
   final String? buyerName;
   final String? buyerNik;
   final bool isPinActive;
+  final CashierBuyerInfo? buyer;
 
   const TransactionInputScreen({
     super.key,
@@ -19,6 +21,7 @@ class TransactionInputScreen extends StatefulWidget {
     this.buyerName,
     this.buyerNik,
     this.isPinActive = false,
+    this.buyer,
   });
 
   @override
@@ -35,9 +38,13 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
   bool _isLoadingFuels = true;
   String? _errorMessage;
 
-  bool _isInputLiters = true;
+  bool _isInputLiters = false;
   double _liters = 0.0;
   int _totalPrice = 0;
+
+  Timer? _debounceTimer;
+  bool _isCalculatingPricing = false;
+  FuelPricingBreakdown? _backendPricing;
 
   @override
   void initState() {
@@ -46,14 +53,27 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
     _plateController.addListener(_onPlateChanged);
     _inputController.addListener(_handleInputChange);
     _loadFuels();
+
+    // [DEBUG LOG] Trace buyer state received from API
+    final b = widget.buyer;
+    if (b != null) {
+      debugPrint('[CASHIER DEBUG] Buyer: ${b.name} (${b.nikSnapshot})');
+      debugPrint('[CASHIER DEBUG] accountStatus=${b.accountStatus}');
+      debugPrint('[CASHIER DEBUG] isBlocked=${b.isBlocked} | isFrozen=${b.isFrozen} | isEligible=${b.isEligible}');
+      debugPrint('[CASHIER DEBUG] frozenUntil=${b.frozenUntil}');
+      debugPrint('[CASHIER DEBUG] quotaLiters=${b.quotaLiters} | usedLiters=${b.usedLiters} | remainingLiters=${b.remainingLiters}');
+    } else {
+      debugPrint('[CASHIER DEBUG] widget.buyer is NULL — status will fall back to vehicle eligibility only');
+    }
   }
 
   void _onPlateChanged() {
-    setState(() {});
+    _triggerPricingCalculation();
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _plateController.removeListener(_onPlateChanged);
     _plateController.dispose();
     _inputController.removeListener(_handleInputChange);
@@ -81,49 +101,79 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
 
   double get _remainingQuota => widget.vehicle.remainingLiters;
 
-  bool get _isEligibleForSubsidy => widget.vehicle.isEligible;
+  /// The account_status enum string from the backend. Single source of truth.
+  /// Values: 'ACTIVE' | 'FROZEN' | 'BANNED' | 'NOT_ELIGIBLE' | 'QUOTA_EXHAUSTED'
+  String get _accountStatus => widget.buyer?.accountStatus ?? 'ACTIVE';
 
-  bool get _hasRemainingQuota => _remainingQuota > 0;
 
   bool get _selectedFuelTypeIsSubsidized =>
       _selectedFuelType?['subsidy_type'] == 'SUBSIDIZED';
 
-  FuelPricingBreakdown? _buildPricingForLiters(double liters) {
+  void _triggerPricingCalculation() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _calculatePricingBackend();
+    });
+  }
+
+  Future<void> _calculatePricingBackend() async {
+    final String text = _inputController.text.trim();
     final fuel = _selectedFuelType;
-    if (fuel == null) return null;
+    if (fuel == null || text.isEmpty) {
+      setState(() {
+        _liters = 0.0;
+        _totalPrice = 0;
+        _backendPricing = null;
+      });
+      return;
+    }
 
-    return FuelPricingBreakdown.fromLiters(
-      liters: liters,
-      marketPricePerLiter: (fuel['price_per_liter'] as num?)?.toDouble() ?? 0.0,
-      subsidizedPricePerLiter: (fuel['subsidy_price_per_liter'] as num?)
-          ?.toDouble(),
-      isSubsidizedFuel: fuel['subsidy_type'] == 'SUBSIDIZED',
-      isEligibleForSubsidy: _isEligibleForSubsidy,
-      remainingQuota: _remainingQuota,
-    );
+    double nominal = 0.0;
+    if (_isInputLiters) {
+      final String sanitizedText = text.replaceAll(',', '.');
+      nominal = double.tryParse(sanitizedText) ?? 0.0;
+    } else {
+      nominal = (int.tryParse(text) ?? 0).toDouble();
+    }
+
+    if (nominal <= 0) {
+      setState(() {
+        _liters = 0.0;
+        _totalPrice = 0;
+        _backendPricing = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isCalculatingPricing = true;
+    });
+
+    try {
+      final pricing = await _repository.calculatePricing(
+        nik: widget.buyerNik ?? '',
+        fuelTypeId: fuel['id'],
+        calcType: _isInputLiters ? 'LITERS' : 'AMOUNT',
+        nominal: nominal,
+        plateNumber: _plateController.text,
+      );
+
+      setState(() {
+        _backendPricing = pricing;
+        _liters = pricing.liters;
+        _totalPrice = pricing.totalAmount;
+        _isCalculatingPricing = false;
+        _errorMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        _isCalculatingPricing = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
   }
 
-  FuelPricingBreakdown? _buildPricingForAmount(int amount) {
-    final fuel = _selectedFuelType;
-    if (fuel == null) return null;
-
-    return FuelPricingBreakdown.fromAmount(
-      amount: amount,
-      marketPricePerLiter: (fuel['price_per_liter'] as num?)?.toDouble() ?? 0.0,
-      subsidizedPricePerLiter: (fuel['subsidy_price_per_liter'] as num?)
-          ?.toDouble(),
-      isSubsidizedFuel: fuel['subsidy_type'] == 'SUBSIDIZED',
-      isEligibleForSubsidy: _isEligibleForSubsidy,
-      remainingQuota: _remainingQuota,
-    );
-  }
-
-  FuelPricingBreakdown? get _pricingBreakdown {
-    if (_selectedFuelType == null) return null;
-    return _isInputLiters
-        ? _buildPricingForLiters(_liters)
-        : _buildPricingForAmount(_totalPrice);
-  }
+  FuelPricingBreakdown? get _pricingBreakdown => _backendPricing;
 
   String _buildFuelChipLabel(Map<String, dynamic> fuel) {
     final name = fuel['name']?.toString() ?? '-';
@@ -141,73 +191,79 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
   }
 
   String get _statusTitle {
-    if (!_isEligibleForSubsidy) {
-      return 'Status: Tidak Layak Subsidi';
+    switch (_accountStatus) {
+      case 'BANNED':          return 'Status: Akun KTP Diblokir';
+      case 'FROZEN':          return 'Status: Akun KTP Dibekukan';
+      case 'NOT_ELIGIBLE':    return 'Status: Tidak Layak Subsidi';
+      case 'QUOTA_EXHAUSTED': return 'Status: Kuota Subsidi Habis';
+      default:                return 'Status: Kuota Subsidi Tersedia';
     }
-    if (_hasRemainingQuota) {
-      return 'Status: Kuota Subsidi Tersedia';
-    }
-    return 'Status: Kuota Subsidi Habis';
   }
 
   String get _statusDetail {
-    if (!_isEligibleForSubsidy) {
-      return 'Warga tetap bisa membeli BBM, tetapi seluruh liter akan dihitung dengan harga normal.';
+    switch (_accountStatus) {
+      case 'BANNED':
+        return 'Akun KTP ini diblokir permanen karena terdeteksi fraud. Transaksi BBM hanya dapat menggunakan harga normal.';
+      case 'FROZEN':
+        String until = widget.buyer?.frozenUntil ?? 'Waktu tidak ditentukan';
+        if (until.contains('T')) {
+          try {
+            final parts = until.split('T');
+            final dateParts = parts[0].split('-');
+            final timeParts = parts[1].split('.');
+            until = '${dateParts[2]}-${dateParts[1]}-${dateParts[0]} ${timeParts[0]}';
+          } catch (_) {}
+        }
+        return 'Akun KTP ini dibekukan sementara karena aktivitas fraud. Dibekukan hingga: $until. Transaksi BBM hanya dapat menggunakan harga normal.';
+      case 'NOT_ELIGIBLE':
+        return 'KK warga tidak memenuhi syarat subsidi BBM karena penghasilan melebihi batas yang ditentukan. Transaksi menggunakan harga normal.';
+      case 'QUOTA_EXHAUSTED':
+        return 'Kuota subsidi bulanan warga telah habis. Seluruh liter akan dihitung dengan harga normal.';
+      default:
+        return 'Sisa kuota ${_remainingQuota.toStringAsFixed(2).replaceAll(".", ",")} Liter. Kuota subsidi akan dipakai lebih dulu.';
     }
-    if (_hasRemainingQuota) {
-      return 'Sisa kuota ${_remainingQuota.toStringAsFixed(2).replaceAll('.', ',')} Liter. Kuota subsidi akan dipakai lebih dulu.';
-    }
-    return 'Warga tetap bisa membeli BBM, tetapi seluruh liter akan dihitung dengan harga normal.';
   }
 
   Color get _statusColor {
-    if (!_isEligibleForSubsidy) {
-      return AppColors.statusCritical;
+    switch (_accountStatus) {
+      case 'BANNED':          return AppColors.statusCritical;
+      case 'FROZEN':          return AppColors.statusCritical;
+      case 'NOT_ELIGIBLE':    return const Color(0xFF757575); // abu-abu
+      case 'QUOTA_EXHAUSTED': return const Color(0xFFB56A00); // orange
+      default:                return AppColors.statusSafe;    // hijau
     }
-    if (_hasRemainingQuota) {
-      return AppColors.statusSafe;
-    }
-    return const Color(0xFFB56A00);
   }
 
   Color get _statusBackground {
-    if (!_isEligibleForSubsidy) {
-      return const Color(0xFFFCE8E8);
+    switch (_accountStatus) {
+      case 'BANNED':          return const Color(0xFFFCE8E8); // merah pucat
+      case 'FROZEN':          return const Color(0xFFFCE8E8); // merah pucat
+      case 'NOT_ELIGIBLE':    return const Color(0xFFF0F0F0); // abu-abu terang
+      case 'QUOTA_EXHAUSTED': return const Color(0xFFFFF3E0); // orange pucat
+      default:                return const Color(0xFFE7F7EC); // hijau pucat
     }
-    if (_hasRemainingQuota) {
-      return const Color(0xFFE7F7EC);
+  }
+
+  String _getPricingWarningText() {
+    switch (_accountStatus) {
+      case 'BANNED':          return 'Akun KTP diblokir permanen, jadi seluruh transaksi memakai harga normal.';
+      case 'FROZEN':          return 'Akun KTP dibekukan sementara, jadi seluruh transaksi memakai harga normal.';
+      case 'NOT_ELIGIBLE':    return 'KK tidak layak subsidi (penghasilan melebihi batas), jadi seluruh transaksi memakai harga normal.';
+      default:                return 'Kuota subsidi sudah habis, jadi seluruh transaksi memakai harga normal.';
     }
-    return const Color(0xFFFFF3E0);
   }
 
   void _handleInputChange() {
     final String text = _inputController.text.trim();
-    if (_selectedFuelType == null) return;
-
     if (text.isEmpty) {
       setState(() {
         _liters = 0.0;
         _totalPrice = 0;
+        _backendPricing = null;
       });
       return;
     }
-
-    if (_isInputLiters) {
-      final String sanitizedText = text.replaceAll(',', '.');
-      final double val = double.tryParse(sanitizedText) ?? 0.0;
-      final pricing = _buildPricingForLiters(val);
-      setState(() {
-        _liters = pricing?.liters ?? val;
-        _totalPrice = pricing?.totalAmount ?? 0;
-      });
-    } else {
-      final int val = int.tryParse(text) ?? 0;
-      final pricing = _buildPricingForAmount(val);
-      setState(() {
-        _liters = pricing?.liters ?? 0.0;
-        _totalPrice = pricing?.totalAmount ?? val;
-      });
-    }
+    _triggerPricingCalculation();
   }
 
   void _selectFuelType(Map<String, dynamic> fuelType) {
@@ -218,9 +274,11 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
   }
 
   bool get _canProceed =>
+      !_isCalculatingPricing &&
       _liters > 0 &&
       _selectedFuelType != null &&
-      _plateController.text.trim().isNotEmpty;
+      (widget.vehicle.category != 'commercial' ||
+          _plateController.text.trim().isNotEmpty);
 
   String _formatCurrency(int value) {
     final String raw = value.toString();
@@ -255,13 +313,23 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
     final pricing = _pricingBreakdown;
 
     return Scaffold(
-      appBar: AppBar(elevation: 0, backgroundColor: AppColors.background),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.background,
+        title: Text(
+          'Input Transaksi',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: AppColors.surface,
@@ -291,29 +359,31 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Plat Nomor Kendaraan',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
+                  if (!widget.vehicle.isPersonal) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'Plat Nomor Kendaraan',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  TextFormField(
-                    controller: _plateController,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      hintText: 'Contoh: N 1234 AB',
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
+                    const SizedBox(height: 4),
+                    TextFormField(
+                      controller: _plateController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        hintText: 'N 1234 AB',
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 0),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -408,24 +478,20 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                     onPressed: () {
                       if (_isInputLiters) return;
                       if (_selectedFuelType == null) return;
+                      final double currentLiters = _liters;
                       setState(() {
                         _isInputLiters = true;
-                        if (_totalPrice > 0) {
-                          final pricing = _buildPricingForAmount(_totalPrice);
-                          final double liters = pricing?.liters ?? 0.0;
-                          final String formatted = liters.toStringAsFixed(2);
-                          _inputController.text = formatted.replaceAll(
-                            '.',
-                            ',',
-                          );
-                          _liters = pricing?.liters ?? liters;
-                          _totalPrice = pricing?.totalAmount ?? _totalPrice;
+                        if (currentLiters > 0) {
+                          final String formatted = currentLiters.toStringAsFixed(2);
+                          _inputController.text = formatted.replaceAll('.', ',');
                         } else {
                           _inputController.clear();
                           _liters = 0.0;
                           _totalPrice = 0;
+                          _backendPricing = null;
                         }
                       });
+                      _triggerPricingCalculation();
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: _isInputLiters
@@ -458,20 +524,19 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                     onPressed: () {
                       if (!_isInputLiters) return;
                       if (_selectedFuelType == null) return;
+                      final int currentPrice = _totalPrice;
                       setState(() {
                         _isInputLiters = false;
-                        if (_liters > 0) {
-                          final pricing = _buildPricingForLiters(_liters);
-                          final int total = pricing?.totalAmount ?? 0;
-                          _inputController.text = total.toString();
-                          _totalPrice = total;
-                          _liters = pricing?.liters ?? _liters;
+                        if (currentPrice > 0) {
+                          _inputController.text = currentPrice.toString();
                         } else {
                           _inputController.clear();
                           _liters = 0.0;
                           _totalPrice = 0;
+                          _backendPricing = null;
                         }
                       });
+                      _triggerPricingCalculation();
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: !_isInputLiters
@@ -525,7 +590,17 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
               decoration: InputDecoration(
                 hintText: '0',
                 prefixText: _isInputLiters ? null : 'Rp ',
-                suffixText: _isInputLiters ? ' Liter' : null,
+                suffixIcon: _isCalculatingPricing
+                    ? const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
+                suffixText: _isInputLiters && !_isCalculatingPricing ? ' Liter' : null,
               ),
             ),
             if (pricing != null &&
@@ -594,11 +669,13 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                         pricing.usesMarketPriceOnly) ...[
                       const SizedBox(height: 8),
                       Text(
-                        !_isEligibleForSubsidy
-                            ? 'KK tidak layak subsidi, jadi seluruh transaksi memakai harga normal.'
-                            : 'Kuota subsidi sudah habis, jadi seluruh transaksi memakai harga normal.',
+                        _getPricingWarningText(),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: switch (_accountStatus) {
+                            'QUOTA_EXHAUSTED' => const Color(0xFFB56A00),
+                            'NOT_ELIGIBLE'    => const Color(0xFF757575),
+                            _                 => AppColors.statusCritical,
+                          },
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -641,6 +718,7 @@ class _TransactionInputScreenState extends State<TransactionInputScreen> {
                           liters: _liters,
                           total: _totalPrice,
                           isPinActive: widget.isPinActive,
+                          category: widget.vehicle.category,
                           pricingBreakdown:
                               pricing ??
                               FuelPricingBreakdown.fromLiters(

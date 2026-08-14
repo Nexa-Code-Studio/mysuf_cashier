@@ -3,7 +3,7 @@ import 'dart:convert';
 import '../core/constants/app_constants.dart';
 
 class QrPayloadDecoder {
-  static const String _qrPrefix = 'MYSUF-QRIS:KTP:';
+  static const String _qrPrefix = 'SUBSIDIA-QRIS:KTP:';
 
   static String decodeOrRaw(String rawValue) {
     final String trimmedValue = rawValue.trim();

@@ -1,6 +1,6 @@
 {
-    "name": "mysuf_cashier",
-    "short_name": "mysuf_cashier",
+    "name": "subsidia_cashier",
+    "short_name": "subsidia_cashier",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

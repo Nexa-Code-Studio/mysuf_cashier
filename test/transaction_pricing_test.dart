@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysuf_cashier/models/transaction_draft.dart';
+import 'package:subsidia_cashier/models/transaction_draft.dart';
 
 void main() {
   group('FuelPricingBreakdown', () {

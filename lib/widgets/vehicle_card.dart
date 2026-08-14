@@ -4,9 +4,9 @@ import '../theme/theme.dart';
 
 class VehicleCard extends StatelessWidget {
   final CashierVehicleInfo vehicle;
-  final VoidCallback onSelect;
+  final VoidCallback? onSelect;
 
-  const VehicleCard({super.key, required this.vehicle, required this.onSelect});
+  const VehicleCard({super.key, required this.vehicle, this.onSelect});
 
   @override
   Widget build(BuildContext context) {
@@ -49,19 +49,28 @@ class VehicleCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      vehicle.plateNumber,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                    if (!vehicle.isPersonal) ...[
+                      Text(
+                        vehicle.plateNumber,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      vehicle.vehicleDisplayType,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 4),
+                      Text(
+                        vehicle.vehicleDisplayType,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
+                    ] else ...[
+                      Text(
+                        vehicle.vehicleDisplayType,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -9,10 +9,17 @@ import '../theme/theme.dart';
 import '../widgets/payment_method_card.dart';
 import '../cashier/cashier_buyer_repository.dart';
 
-class PaymentScreen extends StatelessWidget {
+class PaymentScreen extends StatefulWidget {
   final TransactionDraft draft;
 
   const PaymentScreen({super.key, required this.draft});
+
+  @override
+  State<PaymentScreen> createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends State<PaymentScreen> {
+  bool _isProcessing = false;
 
   String _formatCurrency(int value) {
     final String raw = value.toString();
@@ -49,7 +56,7 @@ class PaymentScreen extends StatelessWidget {
       ),
       builder: (sheetContext) {
         return _EwalletPinSheet(
-          draft: draft,
+          draft: widget.draft,
           onVerify: () => _completeTransaction(context),
         );
       },
@@ -57,6 +64,9 @@ class PaymentScreen extends StatelessWidget {
   }
 
   Future<void> _executeWalletPaymentWithoutPin(BuildContext context) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -67,11 +77,11 @@ class PaymentScreen extends StatelessWidget {
     try {
       final repository = CashierBuyerRepository();
       await repository.executeFuelPurchase(
-        nik: draft.userNik,
-        plateNumber: draft.plate,
-        fuelTypeId: draft.fuelTypeId,
-        liters: draft.liters,
-        totalAmount: draft.total,
+        nik: widget.draft.userNik,
+        plateNumber: widget.draft.plate,
+        fuelTypeId: widget.draft.fuelTypeId,
+        liters: widget.draft.liters,
+        totalAmount: widget.draft.total,
         paymentMethod: 'WALLET',
         pin: null,
       );
@@ -82,6 +92,7 @@ class PaymentScreen extends StatelessWidget {
     } catch (e) {
       if (!context.mounted) return;
       Navigator.pop(context); // Pop the progress dialog
+      setState(() => _isProcessing = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -97,11 +108,11 @@ class PaymentScreen extends StatelessWidget {
   Future<void> _executeCashPayment(BuildContext context, int amountPaid) async {
     final repository = CashierBuyerRepository();
     await repository.executeFuelPurchase(
-      nik: draft.userNik,
-      plateNumber: draft.plate,
-      fuelTypeId: draft.fuelTypeId,
-      liters: draft.liters,
-      totalAmount: draft.total,
+      nik: widget.draft.userNik,
+      plateNumber: widget.draft.plate,
+      fuelTypeId: widget.draft.fuelTypeId,
+      liters: widget.draft.liters,
+      totalAmount: widget.draft.total,
       paymentMethod: 'CASH',
       amountPaid: amountPaid,
       pin: null,
@@ -118,7 +129,7 @@ class PaymentScreen extends StatelessWidget {
       ),
       builder: (sheetContext) {
         return _QrisPaymentSheet(
-          draft: draft,
+          draft: widget.draft,
           formatCurrency: _formatCurrency,
           onComplete: () => _completeTransaction(context),
         );
@@ -136,7 +147,7 @@ class PaymentScreen extends StatelessWidget {
       ),
       builder: (sheetContext) {
         return _CashSheet(
-          total: draft.total,
+          total: widget.draft.total,
           formatCurrency: _formatCurrency,
           onSubmit: (amountPaid) => _executeCashPayment(context, amountPaid),
           onComplete: () => _completeTransaction(context),
@@ -173,33 +184,35 @@ class PaymentScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _InfoRow(label: 'Nama', value: draft.userName),
+                  _InfoRow(label: 'Nama', value: widget.draft.userName),
+                  if (widget.draft.category == 'commercial') ...[
+                    const SizedBox(height: 12),
+                    _InfoRow(label: 'Plat', value: widget.draft.plate),
+                  ],
                   const SizedBox(height: 12),
-                  _InfoRow(label: 'Plat', value: draft.plate),
+                  _InfoRow(label: 'Jenis BBM', value: widget.draft.fuel),
                   const SizedBox(height: 12),
-                  _InfoRow(label: 'Jenis BBM', value: draft.fuel),
-                  const SizedBox(height: 12),
-                  _InfoRow(label: 'Jumlah', value: _formatLiters(draft.liters)),
-                  if (draft.pricingBreakdown.isSubsidizedFuel) ...[
+                  _InfoRow(label: 'Jumlah', value: _formatLiters(widget.draft.liters)),
+                  if (widget.draft.pricingBreakdown.isSubsidizedFuel) ...[
                     const SizedBox(height: 12),
                     _InfoRow(
                       label: 'Porsi Subsidi',
-                      value: draft.pricingBreakdown.subsidizedLiters > 0
+                      value: widget.draft.pricingBreakdown.subsidizedLiters > 0
                           ? _formatLiters(
-                              draft.pricingBreakdown.subsidizedLiters,
+                              widget.draft.pricingBreakdown.subsidizedLiters,
                             )
                           : '0,00 Liter',
                     ),
                     const SizedBox(height: 12),
                     _InfoRow(
                       label: 'Porsi Normal',
-                      value: draft.pricingBreakdown.nonSubsidizedLiters > 0
+                      value: widget.draft.pricingBreakdown.nonSubsidizedLiters > 0
                           ? _formatLiters(
-                              draft.pricingBreakdown.nonSubsidizedLiters,
+                              widget.draft.pricingBreakdown.nonSubsidizedLiters,
                             )
                           : '0,00 Liter',
                     ),
-                    if (draft.pricingBreakdown.usesMixedPricing) ...[
+                    if (widget.draft.pricingBreakdown.usesMixedPricing) ...[
                       const SizedBox(height: 12),
                       Text(
                         'Kuota subsidi dipakai lebih dulu, lalu sisanya dihitung dengan harga normal.',
@@ -207,10 +220,10 @@ class PaymentScreen extends StatelessWidget {
                           color: AppColors.textSecondary,
                         ),
                       ),
-                    ] else if (draft.pricingBreakdown.usesMarketPriceOnly) ...[
+                    ] else if (widget.draft.pricingBreakdown.usesMarketPriceOnly) ...[
                       const SizedBox(height: 12),
                       Text(
-                        draft.pricingBreakdown.isEligibleForSubsidy
+                        widget.draft.pricingBreakdown.isEligibleForSubsidy
                             ? 'Kuota subsidi sudah habis, jadi transaksi ini memakai harga normal.'
                             : 'KK tidak layak subsidi, jadi transaksi ini memakai harga normal.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -230,7 +243,7 @@ class PaymentScreen extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        _formatCurrency(draft.total),
+                        _formatCurrency(widget.draft.total),
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w800,
@@ -253,11 +266,11 @@ class PaymentScreen extends StatelessWidget {
             PaymentMethodCard(
               icon: Icons.account_balance_wallet_outlined,
               title: 'E-Wallet KTP',
-              subtitle: draft.isPinActive
+              subtitle: widget.draft.isPinActive
                   ? 'Wajib verifikasi PIN'
                   : 'Pembayaran instan (Tanpa PIN)',
               onTap: () {
-                if (draft.isPinActive) {
+                if (widget.draft.isPinActive) {
                   _showEwalletSheet(context);
                 } else {
                   _executeWalletPaymentWithoutPin(context);
@@ -854,7 +867,7 @@ class _CashSheetState extends State<_CashSheet> {
                 });
               },
               onSubmitted: (_) => _submit(),
-              decoration: const InputDecoration(hintText: 'Contoh: 100000'),
+              decoration: const InputDecoration(hintText: '100000'),
             ),
             const SizedBox(height: 16),
             Text(

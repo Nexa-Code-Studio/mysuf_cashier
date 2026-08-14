@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysuf_cashier/main.dart';
+import 'package:subsidia_cashier/main.dart';
 
 void main() {
   testWidgets('shows login screen then opens main layout after sign in', (
@@ -11,7 +11,7 @@ void main() {
     expect(find.text('Masuk ke Kasir'), findsOneWidget);
 
     final Finder textFields = find.byType(TextFormField);
-    await tester.enterText(textFields.at(0), 'andi@mysuf.co.id');
+    await tester.enterText(textFields.at(0), 'andi@subsidia.co.id');
     await tester.enterText(textFields.at(1), '123456');
     await tester.tap(find.text('Masuk ke Kasir'));
     await tester.pumpAndSettle();

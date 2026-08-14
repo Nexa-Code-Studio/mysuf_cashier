@@ -57,7 +57,9 @@ class PendingTransactionCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '${item.plate} · ${item.fuel} · ${item.liters}',
+            (item.plate != '-' && item.plate.trim().isNotEmpty)
+                ? '${item.plate} · ${item.fuel} · ${item.liters}'
+                : '${item.fuel} · ${item.liters}',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),

@@ -191,11 +191,13 @@ class TransactionCard extends StatelessWidget {
             label: 'Jenis BBM',
             value: item.fuel,
           ),
-          const SizedBox(height: 8),
-          _InfoRow(
-            label: 'Plat Nomor',
-            value: item.plate,
-          ),
+          if (item.plate != '-' && item.plate.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _InfoRow(
+              label: 'Plat Nomor',
+              value: item.plate,
+            ),
+          ],
           const SizedBox(height: 16),
           const Divider(height: 1),
           const SizedBox(height: 16),

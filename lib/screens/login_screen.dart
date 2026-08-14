@@ -96,7 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 20),
                           Text(
-                            'MySUF Cashier',
+                            'Sidia Cashier',
                             style: Theme.of(
                               context,
                             ).textTheme.headlineSmall?.copyWith(
@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Masuk menggunakan akun operator SPBU yang sudah terdaftar di backend MySUF.',
+                            'Masuk menggunakan akun operator SPBU yang sudah terdaftar di backend Sidia.',
                             style: Theme.of(
                               context,
                             ).textTheme.bodyMedium?.copyWith(
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   textInputAction: TextInputAction.next,
                                   decoration: const InputDecoration(
                                     labelText: 'Email operator',
-                                    hintText: 'Contoh: andi@mysuf.co.id',
+                                    hintText: 'andi@sidia.co.id',
                                   ),
                                   validator: (value) {
                                     final String text = value?.trim() ?? '';
@@ -174,9 +174,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : () {
                                             setState(() {
                                               _emailController.text =
-                                                  'so@mysuf.id';
+                                                  'so@sidia.id';
                                               _passwordController.text =
-                                                  'mysuf123';
+                                                  'subsidia123';
                                             });
                                           },
                                     icon: const Icon(Icons.auto_awesome,

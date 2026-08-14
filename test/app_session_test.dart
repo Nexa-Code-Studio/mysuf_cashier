@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mysuf_cashier/app_session.dart';
-import 'package:mysuf_cashier/auth/auth_repository.dart';
-import 'package:mysuf_cashier/auth/auth_session.dart';
+import 'package:subsidia_cashier/app_session.dart';
+import 'package:subsidia_cashier/auth/auth_repository.dart';
+import 'package:subsidia_cashier/auth/auth_session.dart';
 
 class _FakeAuthRepository extends AuthRepository {
   _FakeAuthRepository({this.session});

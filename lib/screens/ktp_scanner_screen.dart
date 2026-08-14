@@ -113,6 +113,7 @@ class _KtpScannerScreenState extends State<KtpScannerScreen> {
             buyerName: lookupResult.buyer.name,
             buyerNik: lookupResult.buyer.nikSnapshot,
             isPinActive: lookupResult.buyer.isPinActive,
+            buyer: lookupResult.buyer,
           ),
         ),
       );

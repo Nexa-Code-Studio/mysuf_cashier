@@ -21,6 +21,19 @@ class FuelPricingBreakdown {
   final bool isSubsidizedFuel;
   final bool isEligibleForSubsidy;
 
+  factory FuelPricingBreakdown.fromJson(Map<String, dynamic> json) {
+    return FuelPricingBreakdown(
+      liters: (json['total_liters'] as num?)?.toDouble() ?? 0.0,
+      totalAmount: (json['total_amount'] as num?)?.toInt() ?? 0,
+      subsidizedLiters: (json['subsidized_liters'] as num?)?.toDouble() ?? 0.0,
+      nonSubsidizedLiters: (json['non_subsidized_liters'] as num?)?.toDouble() ?? 0.0,
+      marketPricePerLiter: (json['price_per_liter_market'] as num?)?.toDouble() ?? 0.0,
+      subsidizedPricePerLiter: (json['price_per_liter_subsidy'] as num?)?.toDouble(),
+      isSubsidizedFuel: json['price_per_liter_subsidy'] != null,
+      isEligibleForSubsidy: json['account_status'] == 'ACTIVE',
+    );
+  }
+
   bool get usesSubsidy => subsidizedLiters > 0;
   bool get usesMixedPricing => subsidizedLiters > 0 && nonSubsidizedLiters > 0;
   bool get usesMarketPriceOnly =>
@@ -133,6 +146,7 @@ class TransactionDraft {
   final double liters;
   final int total;
   final bool isPinActive;
+  final String category;
   final FuelPricingBreakdown pricingBreakdown;
 
   const TransactionDraft({
@@ -144,6 +158,7 @@ class TransactionDraft {
     required this.liters,
     required this.total,
     required this.isPinActive,
+    required this.category,
     required this.pricingBreakdown,
   });
 }

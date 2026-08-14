@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../core/network/api_client.dart';
 import '../models/cashier_buyer_lookup.dart';
 import '../models/cashier_history_models.dart';
+import '../models/transaction_draft.dart';
 
 class CashierBuyerRepository {
   CashierBuyerRepository({ApiClient? apiClient})
@@ -147,7 +148,7 @@ class CashierBuyerRepository {
 
   Future<Map<String, dynamic>> executeFuelPurchase({
     required String nik,
-    required String plateNumber,
+    required String? plateNumber,
     required String fuelTypeId,
     required double liters,
     required int totalAmount,
@@ -160,7 +161,7 @@ class CashierBuyerRepository {
         '/wallet/fuel-purchase',
         data: {
           'nik': nik,
-          'plate_number': plateNumber,
+          'plate_number': (plateNumber == null || plateNumber.isEmpty) ? null : plateNumber,
           'fuel_type_id': fuelTypeId,
           'liters': liters,
           'total_amount': totalAmount,
@@ -182,7 +183,7 @@ class CashierBuyerRepository {
 
   Future<Map<String, dynamic>> createQrisFuelPurchase({
     required String nik,
-    required String plateNumber,
+    required String? plateNumber,
     required String fuelTypeId,
     required double liters,
     required int totalAmount,
@@ -192,7 +193,7 @@ class CashierBuyerRepository {
         '/wallet/fuel-purchase/qris',
         data: {
           'nik': nik,
-          'plate_number': plateNumber,
+          'plate_number': (plateNumber == null || plateNumber.isEmpty) ? null : plateNumber,
           'fuel_type_id': fuelTypeId,
           'liters': liters,
           'total_amount': totalAmount,
@@ -229,7 +230,7 @@ class CashierBuyerRepository {
 
   Future<Map<String, dynamic>> createXenditFuelPurchase({
     required String nik,
-    required String plateNumber,
+    required String? plateNumber,
     required String fuelTypeId,
     required double liters,
     required int totalAmount,
@@ -239,7 +240,7 @@ class CashierBuyerRepository {
         '/wallet/fuel-purchase/xendit',
         data: {
           'nik': nik,
-          'plate_number': plateNumber,
+          'plate_number': (plateNumber == null || plateNumber.isEmpty) ? null : plateNumber,
           'fuel_type_id': fuelTypeId,
           'liters': liters,
           'total_amount': totalAmount,
@@ -269,6 +270,36 @@ class CashierBuyerRepository {
         throw Exception('Gagal membaca status pembayaran Xendit.');
       }
       return data;
+    } on DioException catch (error) {
+      throw Exception(_extractErrorMessage(error));
+    }
+  }
+
+  Future<FuelPricingBreakdown> calculatePricing({
+    required String nik,
+    required String fuelTypeId,
+    required String calcType,
+    required double nominal,
+    String? plateNumber,
+  }) async {
+    try {
+      final response = await _apiClient.dio.post<Map<String, dynamic>>(
+        '/vehicle-ownerships/cashier/pricing',
+        data: {
+          'nik': nik,
+          'fuel_type_id': fuelTypeId,
+          'calc_type': calcType,
+          'nominal': nominal,
+          if (plateNumber != null && plateNumber.trim().isNotEmpty)
+            'plate_number': plateNumber.trim().toUpperCase(),
+        },
+      );
+
+      final data = response.data;
+      if (data == null) {
+        throw Exception('Gagal melakukan kalkulasi harga dari backend.');
+      }
+      return FuelPricingBreakdown.fromJson(data);
     } on DioException catch (error) {
       throw Exception(_extractErrorMessage(error));
     }

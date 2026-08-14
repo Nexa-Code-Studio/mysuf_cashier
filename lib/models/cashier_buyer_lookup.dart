@@ -28,10 +28,14 @@ class CashierBuyerInfo {
     required this.verificationStatus,
     required this.riskScore,
     this.isPinActive = false,
+    this.isBlocked = false,
+    this.isFrozen = false,
+    this.frozenUntil,
     this.quotaLiters = 0.0,
     this.usedLiters = 0.0,
     this.remainingLiters = 0.0,
     this.isEligible = false,
+    this.accountStatus = 'ACTIVE',
   });
 
   final String buyerProfileId;
@@ -41,10 +45,20 @@ class CashierBuyerInfo {
   final String verificationStatus;
   final double riskScore;
   final bool isPinActive;
+  final bool isBlocked;
+  final bool isFrozen;
+  final String? frozenUntil;
   final double quotaLiters;
   final double usedLiters;
   final double remainingLiters;
   final bool isEligible;
+
+  /// Single source of truth for account restriction state.
+  /// Values: 'ACTIVE' | 'FROZEN' | 'BANNED' | 'NOT_ELIGIBLE' | 'QUOTA_EXHAUSTED'
+  final String accountStatus;
+
+  /// Returns true if the buyer's account is blocked or frozen — cannot transact.
+  bool get isAccountRestricted => isBlocked || isFrozen;
 
   factory CashierBuyerInfo.fromJson(Map<String, dynamic> json) {
     return CashierBuyerInfo(
@@ -55,10 +69,14 @@ class CashierBuyerInfo {
       verificationStatus: json['verification_status']?.toString() ?? '-',
       riskScore: (json['risk_score'] as num?)?.toDouble() ?? 0,
       isPinActive: json['is_pin_active'] as bool? ?? false,
+      isBlocked: json['is_blocked'] as bool? ?? false,
+      isFrozen: json['is_frozen'] as bool? ?? false,
+      frozenUntil: json['frozen_until']?.toString(),
       quotaLiters: (json['quota_liters'] as num?)?.toDouble() ?? 0.0,
       usedLiters: (json['used_liters'] as num?)?.toDouble() ?? 0.0,
       remainingLiters: (json['remaining_liters'] as num?)?.toDouble() ?? 0.0,
       isEligible: json['is_eligible'] as bool? ?? false,
+      accountStatus: json['account_status']?.toString() ?? 'ACTIVE',
     );
   }
 }
@@ -87,7 +105,7 @@ class CashierVehicleInfo {
     return CashierVehicleInfo(
       ownershipId: '',
       vehicleId: '',
-      plateNumber: 'KTP',
+      plateNumber: '',
       registrationNumber: '-',
       typeLabel: 'Subsidi Personal',
       category: 'PERSONAL',
@@ -120,6 +138,11 @@ class CashierVehicleInfo {
   final double quotaLiters;
   final double usedLiters;
   final double remainingLiters;
+
+  bool get isPersonal =>
+      category.toUpperCase() == 'PERSONAL' ||
+      category.toUpperCase() == 'NONCOMMERCIAL' ||
+      category.toUpperCase() == 'NON-COMMERCIAL';
 
   String get vehicleDisplayType =>
       vehicleType.isNotEmpty ? vehicleType : typeLabel;

@@ -40,7 +40,7 @@ class _MyAppState extends State<MyApp> {
               children: [
                 MaterialApp(
                   debugShowCheckedModeBanner: false,
-                  title: 'MySUF Cashier',
+                  title: 'Sidia Cashier',
                   theme: AppTheme.lightTheme(),
                   home: _session.isInitializing
                       ? const SplashScreen()

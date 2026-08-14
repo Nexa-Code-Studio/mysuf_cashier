@@ -234,7 +234,9 @@ class _PerformanceStatScreenState extends State<PerformanceStatScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item.plate,
+                                      (item.plate != '-' && item.plate.trim().isNotEmpty)
+                                          ? item.plate
+                                          : 'Transaksi Personal',
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleSmall

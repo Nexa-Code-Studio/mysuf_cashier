@@ -42,7 +42,16 @@ class _ManualNikScreenState extends State<ManualNikScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(elevation: 0, backgroundColor: AppColors.background),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.background,
+        title: Text(
+          'Input NIK',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
@@ -61,7 +70,7 @@ class _ManualNikScreenState extends State<ManualNikScreen> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               maxLength: 16,
               decoration: const InputDecoration(
-                hintText: 'Contoh: 3201234567890001',
+                hintText: '3201234567890001',
                 counterText: '',
               ),
             ),
@@ -84,6 +93,7 @@ class _ManualNikScreenState extends State<ManualNikScreen> {
                                 buyerName: lookupResult.buyer.name,
                                 buyerNik: lookupResult.buyer.nikSnapshot,
                                 isPinActive: lookupResult.buyer.isPinActive,
+                                buyer: lookupResult.buyer,
                               ),
                             ),
                           );

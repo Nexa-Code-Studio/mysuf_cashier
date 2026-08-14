@@ -41,9 +41,20 @@ class VehicleSelectionScreen extends StatelessWidget {
     final buyerName = lookupResult?.buyer.name ?? currentUser.name;
     final buyerNik = lookupResult?.buyer.nikSnapshot ?? currentUser.nik;
     final vehicles = _buildVehicles();
+    final buyer = lookupResult?.buyer;
+    final isRestricted = buyer?.isAccountRestricted ?? false;
 
     return Scaffold(
-      appBar: AppBar(elevation: 0, backgroundColor: AppColors.background),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: AppColors.background,
+        title: Text(
+          'Pilih Kendaraan',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
@@ -91,6 +102,63 @@ class VehicleSelectionScreen extends StatelessWidget {
                 ],
               ),
             ),
+
+            // ── Frozen / Blocked Warning Banner ──────────────────────────
+            if (isRestricted) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEEEE),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE53935), width: 1.5),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.block_rounded,
+                      color: Color(0xFFE53935),
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            buyer!.isBlocked
+                                ? 'Akun Diblokir Permanen'
+                                : 'Akun Dibekukan Sementara',
+                            style: const TextStyle(
+                              color: Color(0xFFB71C1C),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            buyer.isBlocked
+                                ? 'Akun pembeli ini telah diblokir permanen oleh sistem keamanan karena terdeteksi aktivitas fraud. Transaksi BBM subsidi tidak dapat dilanjutkan.'
+                                : 'Akun pembeli ini sedang dibekukan sementara karena terdeteksi pola pembelian mencurigakan. '
+                                  '${buyer.frozenUntil != null ? "Dibekukan hingga: ${buyer.frozenUntil}" : ""}'
+                                  '\nTransaksi BBM subsidi tidak dapat dilanjutkan.',
+                            style: const TextStyle(
+                              color: Color(0xFFC62828),
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            // ─────────────────────────────────────────────────────────────
+
             const SizedBox(height: 20),
             Text(
               'Kendaraan Terdaftar',
@@ -118,21 +186,28 @@ class VehicleSelectionScreen extends StatelessWidget {
             ...vehicles.map(
               (vehicle) => Padding(
                 padding: const EdgeInsets.only(bottom: 14),
-                child: VehicleCard(
-                  vehicle: vehicle,
-                  onSelect: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TransactionInputScreen(
-                          vehicle: vehicle,
-                          buyerName: buyerName,
-                          buyerNik: buyerNik,
-                          isPinActive: lookupResult?.buyer.isPinActive ?? false,
-                        ),
-                      ),
-                    );
-                  },
+                child: Opacity(
+                  opacity: isRestricted ? 0.45 : 1.0,
+                  child: VehicleCard(
+                    vehicle: vehicle,
+                    onSelect: isRestricted
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => TransactionInputScreen(
+                                  vehicle: vehicle,
+                                  buyerName: buyerName,
+                                  buyerNik: buyerNik,
+                                  isPinActive:
+                                      lookupResult?.buyer.isPinActive ?? false,
+                                  buyer: lookupResult?.buyer,
+                                ),
+                              ),
+                            );
+                          },
+                  ),
                 ),
               ),
             ),
@@ -142,3 +217,4 @@ class VehicleSelectionScreen extends StatelessWidget {
     );
   }
 }
+

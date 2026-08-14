@@ -1,6 +1,6 @@
-# MySuF Cashier (POS Application)
+# SUBSIDIA Cashier (POS Application)
 
-Aplikasi POS / Kasir untuk ekosistem **MySuF (Smart Subsidized Fuel Ecosystem)**.
+Aplikasi POS / Kasir untuk ekosistem **SUBSIDIA (Smart Subsidized Fuel Ecosystem)**.
 
 ## 🛠️ Langkah Menjalankan Aplikasi
 
@@ -32,5 +32,5 @@ flutter pub get
 *   **Custom API URL**
     Menggunakan custom IP atau port tertentu:
     ```bash
-    flutter run --dart-define=MYSUF_API_BASE_URL=http://10.0.2.2:8080/api/v1
+    flutter run --dart-define=SUBSIDIA_API_BASE_URL=http://10.0.2.2:8080/api/v1
     ```

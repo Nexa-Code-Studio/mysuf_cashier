@@ -40,7 +40,12 @@ class AppSession extends ChangeNotifier {
       loadAccessToken: _authRepository.loadAccessToken,
       loadRefreshToken: _authRepository.loadRefreshToken,
       refreshAccessToken: _authRepository.refreshAccessToken,
-      clearSession: _authRepository.clearSession,
+      clearSession: () async {
+        await _authRepository.clearSession();
+        _authSession = null;
+        _isAuthenticated = false;
+        notifyListeners();
+      },
     );
   }
 
